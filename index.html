@@ -699,7 +699,7 @@ function renumberPZ(ls) { let mx = Math.max(0, ...ls.filter(l => l.kind === "pz"
 const gpath = g => "groups/" + g.id;
 function markAtt(g, sid, lid, v) {
   const p = { marks: { [sid]: { [lid]: { a: v || null } } } };
-  if (v && stOf(g, lid) === "plan") { p.sched = { [lid]: { status: "done", fact: sch(g, lid).plan || todayISO() } }; toast("Занятие отмечено как проведённое"); }
+  if (v && stOf(g, lid) === "plan") { p.sched = { [lid]: { status: "done", ...(dOf(g, lid) ? {} : { plan: todayISO() }) } }; toast("Занятие отмечено как проведённое"); }
   Store.patch(gpath(g), p);
 }
 function markGrade(g, sid, lid, v) { Store.patch(gpath(g), { marks: { [sid]: { [lid]: { g: v || null } } } }); }
@@ -707,14 +707,13 @@ function markExam(g, sid, v) { Store.patch(gpath(g), { exam: { [sid]: v || null 
 function allPresent(g, lid) {
   const m = {}; let n = 0;
   for (const s of students(g)) if (!mk(g, s.id, lid).a) { m[s.id] = { [lid]: { a: "Б" } }; n++; }
-  const p = { marks: m }; if (stOf(g, lid) === "plan") p.sched = { [lid]: { status: "done", fact: sch(g, lid).plan || todayISO() } };
+  const p = { marks: m }; if (stOf(g, lid) === "plan") p.sched = { [lid]: { status: "done", ...(dOf(g, lid) ? {} : { plan: todayISO() }) } };
   if (n || p.sched) Store.patch(gpath(g), p);
   toast(n ? `Отмечено присутствующими: ${n}` : "Все уже отмечены");
 }
 function setStatus(g, lid, st) {
   const cur = sch(g, lid), p = { status: st };
-  if (st === "done" && !cur.fact) p.fact = cur.plan && cur.plan <= todayISO() ? cur.plan : todayISO();
-  if (st === "plan") p.fact = null;
+  if (st === "done" && !dOf(g, lid)) p.plan = todayISO();
   Store.patch(gpath(g), { sched: { [lid]: p } });
 }
 
@@ -842,7 +841,7 @@ function vToday() {
       <section class="card"><div class="sec-h"><h2 class="h2">Сегодня</h2></div>
         <div class="list">${todays.length ? todays.map(x => lrow(x)).join("") : `<p class="muted small" style="margin:6px 0">В плане на сегодня ничего нет. Чтобы провести внеплановое занятие, нажмите «Провести занятие» и выберите его из списка.</p>`}</div></section>
       ${over.length ? `<section class="card warn"><div class="sec-h"><h2 class="h2">Не отмечены</h2><span class="count">${over.length}</span></div>
-        <p class="muted small sec-p">Дата по плану уже прошла, а занятие не отмечено. Если оно было, нажмите «Было». Если перенесли, откройте его и поменяйте дату.</p>
+        <p class="muted small sec-p">Дата занятия уже прошла, а оно не отмечено. Если оно было, нажмите «Было». Если перенесли, откройте его и поменяйте дату.</p>
         <div class="list">${over.slice(0, 5).map(x => lrow(x, "over")).join("")}</div>${over.length > 5 ? `<button class="linkbtn" data-act="nav" data-v="plan">Показать все ${over.length} в плане</button>` : ""}</section>` : ""}
       <section class="card"><div class="sec-h"><h2 class="h2">Ближайшая неделя</h2></div>
         <div class="list">${up.length ? up.slice(0, 8).map(x => lrow(x)).join("") : `<p class="muted small" style="margin:6px 0">Дат на неделю вперёд нет. Их можно расставить сразу для всего семестра в разделе <button class="linkbtn" data-act="nav" data-v="plan">План и КТП</button>.</p>`}</div></section>
@@ -863,7 +862,7 @@ function vToday() {
         <span class="gc-stats"><span><b>${x.pct ?? "—"}${x.pct != null ? "%" : ""}</b><small>посещаемость</small></span><span><b>${fmtNum(x.avg, 1)}</b><small>средний балл</small></span><span><b class="${x.risk ? "red" : ""}">${x.risk}</b><small>с долгами</small></span></span>
       </button>
       <div class="gc-foot">${x.next ? `<button class="btn sm pri" data-act="go-lesson" data-gid="${g.id}" data-lid="${x.next.id}">${ic("lesson")}Провести занятие ${esc(no[x.next.id])}</button>` : `<span class="small muted">Все занятия проведены</span>`}<button class="btn sm ghost" data-act="open-journal" data-gid="${g.id}">Журнал</button></div>
-      ${x.next ? `<p class="gc-next"><span>Дальше: ${esc(x.next.topic)}${sch(g, x.next.id).plan ? `, по плану ${fmtD(sch(g, x.next.id).plan)}` : ""}</span></p>` : ""}
+      ${x.next ? `<p class="gc-next"><span>Дальше: ${esc(x.next.topic)}${dOf(g, x.next.id) ? `, ${fmtD(dOf(g, x.next.id))}` : ""}</span></p>` : ""}
     </article>`; }).join("")}</div>
   </section>`;
 }
@@ -959,8 +958,7 @@ function vLesson() {
       <button class="icon-btn bordered" data-act="lm-step" data-v="1" ${idx >= ls.length - 1 ? "disabled" : ""} aria-label="Следующее занятие" title="Следующее">${ic("right")}</button></div></div>
     <div class="lm-title"><div class="row"><span class="kind ${l.kind}">${esc(kindTxt)}</span>${l.graded ? `<span class="kind">ставятся оценки</span>` : ""}${stPill}</div>
       <h2 class="lm-topic">${esc(l.topic)}</h2></div>
-    <div class="lm-meta"><label class="field inline">Дата проведения <input type="date" class="inp" id="lm-date" data-ch="lm-date" value="${esc(s0.fact || s0.plan || todayISO())}"></label>
-      ${s0.plan ? `<span class="small muted">по плану ${fmtLong(s0.plan)}</span>` : ""}
+    <div class="lm-meta"><label class="field inline">Дата <input type="date" class="inp" id="lm-date" data-ch="lm-date" value="${esc(dOf(g, l.id) || todayISO())}"></label>
       <details class="more"><summary>Перенести или отменить</summary><div class="seg" role="group" aria-label="Статус занятия">${Object.entries(STATUS).map(([k, v]) => `<button data-act="set-status" data-lid="${l.id}" data-v="${k}" aria-pressed="${st === k}">${v}</button>`).join("")}</div></details></div>
     ${st === "plan" && !isExam ? `<p class="small muted" style="margin:0">Занятие станет «Проведено» само, как только вы отметите первого студента.</p>` : ""}
   </section>
@@ -983,7 +981,7 @@ function vPlan() {
   const exam = ls.find(l => l.kind === "exam");
   let sec = null, rows = "";
   ls.forEach((l, i) => {
-    if ((l.section || "") !== sec) { sec = l.section || ""; rows += `<tr class="sec"><td colspan="${ed ? 8 : 7}">${esc(sec || "Без раздела")}${ed ? ` <button class="btn ghost sm" data-act="ce-add" data-after="${i}" data-ref="${i}" style="float:right">${ic("plus")}Занятие в начало раздела</button>` : ""}</td></tr>`; }
+    if ((l.section || "") !== sec) { sec = l.section || ""; rows += `<tr class="sec"><td colspan="${ed ? 8 : 6}">${esc(sec || "Без раздела")}${ed ? ` <button class="btn ghost sm" data-act="ce-add" data-after="${i}" data-ref="${i}" style="float:right">${ic("plus")}Занятие в начало раздела</button>` : ""}</td></tr>`; }
     const s = sch(g, l.id), st = s.status || "plan", isT = (s.fact || s.plan) === t;
     if (ed) {
       rows += `<tr><td class="n">${esc(no[l.id])}</td><td><select data-ch="ce-kind" data-i="${i}" aria-label="Вид">${Object.entries(KINDS).map(([k, v]) => `<option value="${k}" ${l.kind === k ? "selected" : ""}>${v.label}</option>`).join("")}</select>${l.kind === "pz" ? ` <label class="small muted">№<input class="inp" type="number" min="1" max="200" style="width:64px;margin-left:4px" id="ce-p-${l.id}" data-ch="ce-pz" data-i="${i}" value="${l.pz || ""}" aria-label="Номер ПЗ"></label>` : ""}</td>
@@ -994,8 +992,7 @@ function vPlan() {
         <td style="white-space:nowrap"><button class="icon-btn" data-act="ce-move" data-i="${i}" data-v="-1" aria-label="Выше">${ic("up")}</button><button class="icon-btn" data-act="ce-move" data-i="${i}" data-v="1" aria-label="Ниже">${ic("down")}</button><button class="icon-btn" data-act="ce-add" data-after="${i + 1}" aria-label="Добавить после">${ic("plus")}</button><button class="icon-btn" data-act="ce-del" data-i="${i}" aria-label="Удалить">${ic("trash")}</button></td><td></td></tr>`;
     } else {
       rows += `<tr class="${st}${isT ? " today" : ""}"><td class="n">${esc(no[l.id])}</td><td><span class="kind ${l.kind}">${l.kind === "pz" ? "ПЗ" + l.pz : kindLabel(g, l)}</span></td><td class="topic">${esc(l.topic)}</td><td class="n">${l.hours || ""}</td>
-        <td>${l.kind === "sr" ? "" : `<input type="date" id="pl-${l.id}" data-ch="plan-date" data-lid="${l.id}" value="${esc(s.plan || "")}" aria-label="Дата по плану">`}</td>
-        <td>${l.kind === "sr" ? "" : `<input type="date" id="fa-${l.id}" data-ch="fact-date" data-lid="${l.id}" value="${esc(s.fact || "")}" aria-label="Дата фактически">`}</td>
+        <td>${l.kind === "sr" ? "" : `<input type="date" id="pl-${l.id}" data-ch="plan-date" data-lid="${l.id}" value="${esc(dOf(g, l.id))}" aria-label="Дата занятия">`}</td>
         <td>${l.kind === "sr" ? "" : `<select data-ch="status" data-lid="${l.id}" class="pill st-${st}" style="border:0" aria-label="Статус">${Object.entries(STATUS).map(([k, v]) => `<option value="${k}" ${st === k ? "selected" : ""}>${v}</option>`).join("")}</select>`}</td></tr>`;
     }
   });
@@ -1011,7 +1008,7 @@ function vPlan() {
   <div class="row" style="justify-content:space-between"><div><div class="eyebrow">Программа</div><h2 class="h2">${esc(c.title)}${c.semester ? `<span class="muted" style="font-weight:400">, ${esc(c.semester)}</span>` : ""}</h2></div>
     <button class="btn ${ed ? "pri" : ""}" data-act="plan-edit">${ed ? ic("check") + "Готово" : "Редактировать программу"}</button></div>
   ${ed ? `<div class="banner">Программа общая для групп: ${esc(used.join(", "))}. Изменения тем и порядка сразу видны во всех этих группах.</div>` : ""}
-  <div class="tbl-wrap"><table class="ptbl"><thead><tr>${ed ? "<th>№</th><th>Вид</th><th>Тема</th><th>Часы</th><th>Оценка</th><th>Раздел</th><th></th><th></th>" : "<th>№</th><th>Вид</th><th>Тема</th><th>Ч.</th><th>План</th><th>Факт</th><th>Статус</th>"}</tr></thead><tbody>${rows}</tbody></table></div>
+  <div class="tbl-wrap"><table class="ptbl"><thead><tr>${ed ? "<th>№</th><th>Вид</th><th>Тема</th><th>Часы</th><th>Оценка</th><th>Раздел</th><th></th><th></th>" : "<th>№</th><th>Вид</th><th>Тема</th><th>Ч.</th><th>Дата</th><th>Статус</th>"}</tr></thead><tbody>${rows}</tbody></table></div>
   ${ed ? `<div><button class="btn" data-act="ce-add" data-after="${ls.length}">${ic("plus")}Добавить занятие в конец</button></div>` : ""}`;
 }
 
@@ -1107,7 +1104,7 @@ function openHelp() {
     <section><h3>Журнал</h3><p>Вся группа на одной странице. Нажмите на клетку, чтобы поставить или исправить отметку. Нажмите на номер занятия в шапке таблицы, чтобы отметить всех сразу, перенести или отменить занятие.</p>
       <div class="legend"><span><span class="cell a-p"></span>был</span><span><span class="cell a-n">н</span>не был</span><span><span class="cell a-u">у</span>уважительная</span><span><span class="cell a-o">оп</span>опоздал</span><span><span class="cell miss"></span>работа не сдана</span></div></section>
     <section><h3>Оценки и итог</h3><p>Средний балл считается по практическим работам. Итог — среднее из среднего балла и оценки за экзамен или зачёт; пока её нет, итог показан в пунктирной рамке как прогноз. Долги — это двойки, «н» и несданные работы на уже проведённых практических.</p></section>
-    <section><h3>План и КТП</h3><p>Даты по плану и по факту для каждой группы. «Расставить даты по расписанию» заполнит план до конца семестра. Темы, порядок и номера ПЗ меняются кнопкой «Редактировать программу».</p></section>
+    <section><h3>План и КТП</h3><p>Даты всех занятий каждой группы. «Расставить даты по расписанию» заполнит план до конца семестра. Темы, порядок и номера ПЗ меняются кнопкой «Редактировать программу».</p></section>
     <section><h3>Группы и студенты</h3><p>Новая группа, список студентов (можно вставить столбец из Excel), переименование и сортировка. Перевести студента в другую группу можно из его карточки — она открывается нажатием на ФИО.</p></section>
     <section><h3>Где хранятся данные</h3><p>${store}</p></section>
     <section class="hide-m"><h3>Клавиши в журнале</h3><p><kbd>Б</kbd> или <kbd>+</kbd> был, <kbd>Н</kbd> или <kbd>-</kbd> не был, <kbd>У</kbd> уважительная, <kbd>О</kbd> опоздал, <kbd>2</kbd>–<kbd>5</kbd> оценки, <kbd>Del</kbd> убрать, стрелки — переход между клетками.</p></section>
@@ -1209,9 +1206,8 @@ document.addEventListener("change", e => {
   switch (ch) {
     case "lm-pick": S.ui.lessonId = el.value; render(); break;
     case "pick-course": S.ui.cid = el.value; S.ui.gid = null; S.ui.lessonId = null; render(); break;
-    case "lm-date": { if (!el.value) break; const lid = S.ui.lessonId; const p = { fact: el.value }; Store.patch(gpath(g), { sched: { [lid]: p } }); break; }
-    case "plan-date": Store.patch(gpath(g), { sched: { [el.dataset.lid]: { plan: el.value || null } } }); break;
-    case "fact-date": Store.patch(gpath(g), { sched: { [el.dataset.lid]: { fact: el.value || null } } }); break;
+    case "lm-date": { if (!el.value) break; const lid = S.ui.lessonId; const p = { plan: el.value, fact: null }; Store.patch(gpath(g), { sched: { [lid]: p } }); break; }
+    case "plan-date": Store.patch(gpath(g), { sched: { [el.dataset.lid]: { plan: el.value || null, fact: null } } }); break;
     case "status": setStatus(g, el.dataset.lid, el.value); break;
     case "ce-pz": case "ce-topic": case "ce-hours": case "ce-section": case "ce-kind": case "ce-graded": {
       const c = courseOf(g); const ls = clone(c.lessons); const l = ls[+el.dataset.i];
@@ -1286,7 +1282,7 @@ function autoDates(g) {
   const ls = lessonsOf(g).filter(l => l.kind !== "sr" && !["done", "cancel"].includes(stOf(g, l.id)));
   if (!ls.length) { toast("Все занятия уже проведены"); return; }
   const d = new Date(start + "T12:00"); let slot = 0; const p = {};
-  for (const l of ls) { let guard = 0; while (!days.has(d.getDay()) && guard++ < 8) d.setDate(d.getDate() + 1); p[l.id] = { plan: isoOf(d) }; if (++slot >= per) { slot = 0; d.setDate(d.getDate() + 1); } }
+  for (const l of ls) { let guard = 0; while (!days.has(d.getDay()) && guard++ < 8) d.setDate(d.getDate() + 1); p[l.id] = { plan: isoOf(d), fact: null }; if (++slot >= per) { slot = 0; d.setDate(d.getDate() + 1); } }
   const last = p[ls[ls.length - 1].id].plan;
   modal({ title: "Расставить даты?", text: `${ls.length} ${plural(ls.length, "занятие получит", "занятия получат", "занятий получат")} даты с ${fmtLong(start)} по ${fmtLong(last)}. Прежние плановые даты этих занятий заменятся.`, ok: "Расставить", onOk: () => { Store.patch(gpath(g), { sched: p }); toast("Даты расставлены"); } });
 }
@@ -1327,10 +1323,10 @@ async function exportXlsx() {
   const gsel = ids.map(i => S.groups[i]);
   for (const cid of usedCourses) {
     const c = S.courses[cid]; if (!c) continue; const gg = gsel.filter(g => g.courseId === cid); const no = numbering(gg[0]);
-    const K = [[c.title + (c.semester ? " — " + c.semester : "")], [], ["№", "Вид", "Тема", "Часы", ...gg.flatMap(g => [g.name + ": план", "факт", "статус"])]];
+    const K = [[c.title + (c.semester ? " — " + c.semester : "")], [], ["№", "Вид", "Тема", "Часы", ...gg.flatMap(g => [g.name + ": дата", "статус"])]];
     let sec = null;
-    for (const l of c.lessons || []) { if (l.section !== sec) { sec = l.section; K.push([sec || ""]); } K.push([no[l.id], l.kind === "pz" ? "ПЗ " + l.pz : KINDS[l.kind].label, l.topic, l.hours || "", ...gg.flatMap(g => { const s = sch(g, l.id); return [fmtD(s.plan), fmtD(s.fact), l.kind === "sr" ? "" : STATUS[s.status || "plan"]]; })]); }
-    const w = X.utils.aoa_to_sheet(K); w["!cols"] = [{ wch: 5 }, { wch: 12 }, { wch: 60 }, { wch: 6 }, ...gg.flatMap(() => [{ wch: 9 }, { wch: 9 }, { wch: 13 }])];
+    for (const l of c.lessons || []) { if (l.section !== sec) { sec = l.section; K.push([sec || ""]); } K.push([no[l.id], l.kind === "pz" ? "ПЗ " + l.pz : KINDS[l.kind].label, l.topic, l.hours || "", ...gg.flatMap(g => { const s = sch(g, l.id); return [fmtD(dOf(g, l.id)), l.kind === "sr" ? "" : STATUS[s.status || "plan"]]; })]); }
+    const w = X.utils.aoa_to_sheet(K); w["!cols"] = [{ wch: 5 }, { wch: 12 }, { wch: 60 }, { wch: 6 }, ...gg.flatMap(() => [{ wch: 9 }, { wch: 13 }])];
     X.utils.book_append_sheet(wb, w, nm("КТП " + cshort(c)));
   }
   const buf = X.write(wb, { type: "array", bookType: "xlsx" });
