@@ -545,6 +545,9 @@ details.more .seg{margin-top:8px;flex-wrap:wrap}
   .ptbl.ls td:nth-child(5){grid-column:4;grid-row:2}
   .ptbl.ls tr.next,.ptbl.ls tr.today{background:color-mix(in srgb,var(--accent-soft) 60%,var(--surface))}
 }
+
+.cell.abs{position:relative}
+.cell.abs::after{content:"н";position:absolute;top:1px;right:3px;font:600 9px/1 var(--f-mono);color:var(--g2)}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 
@@ -602,7 +605,7 @@ const ic = (n, cls = "") => `<svg class="${cls}" viewBox="0 0 24 24" fill="none"
 const KINDS = { lec: { label: "Лекция", short: "Л" }, pz: { label: "Практическое занятие", short: "ПЗ" }, cons: { label: "Консультация", short: "К" }, sr: { label: "Самостоятельная работа", short: "СР" }, exam: { label: "Экзамен", short: "Э" } };
 const STATUS = { plan: "Не проведено", done: "Проведено", moved: "Перенесено", cancel: "Отменено" };
 const ATT = { "Б": { label: "Был", cls: "p", short: "Б" }, "Н": { label: "Не был", cls: "n", short: "Н" }, "У": { label: "Уваж.", cls: "u", short: "У" }, "О": { label: "Опоздал", cls: "o", short: "Оп" } };
-const GR = ["5", "4", "3", "2"];
+const GR = ["5", "4", "3", "2", "н"];
 const gcls = v => v === "н" ? "gn" : "g" + v;
 
 /* ================= state ================= */
@@ -611,7 +614,7 @@ const S = {
   ui: Object.assign({ view: "today", gid: null, tab: "att", lessonId: null, planEdit: false, sumSort: "name", mgid: null }, LS.get("zh-ui", {})),
   readOnly: false
 };
-const saveUI = () => LS.set("zh-ui", { view: S.ui.view, gid: S.ui.gid, cid: S.ui.cid, tab: S.ui.tab, sumSort: S.ui.sumSort, mgid: S.ui.mgid });
+const saveUI = () => LS.set("zh-ui", { jmode: S.ui.jmode, view: S.ui.view, gid: S.ui.gid, cid: S.ui.cid, tab: S.ui.tab, sumSort: S.ui.sumSort, mgid: S.ui.mgid });
 const settings = () => Object.assign({ teacher: "", college: "", attLow: 50, debtHigh: 3 }, S.settings);
 
 /* ================= store ================= */
@@ -772,7 +775,7 @@ function markAtt(g, sid, lid, v) {
   Store.patch(gpath(g), p);
 }
 function markGrade(g, sid, lid, v) {
-  const m = { g: v || null }; if (v && !mk(g, sid, lid).a) m.a = "Б";
+  const m = { g: v || null };
   const p = { marks: { [sid]: { [lid]: m } } };
   if (v && stOf(g, lid) === "plan") p.sched = { [lid]: { status: "done", ...(dOf(g, lid) ? {} : { plan: todayISO() }) } };
   Store.patch(gpath(g), p);
@@ -943,45 +946,50 @@ function vToday() {
 
 /* ---------- Журнал ---------- */
 function lh(g, l, no) {
-  const st = stOf(g, l.id), d = dOf(g, l.id), t = todayISO();
-  const k = l.kind === "pz" ? "ПЗ " + (l.pz || "") : l.kind === "cons" ? "конс." : "";
-  return `<th class="lh s-${st}${d === t ? " today" : ""}" data-act="lesson-pop" data-lid="${l.id}" title="${esc(kindLabel(g, l) + ": " + l.topic + " (" + STATUS[st].toLowerCase() + ")")}"><span class="k">${esc(k)}</span><span class="n">${esc(no[l.id])}</span><span class="d">${fmtD(d) || "—"}</span></th>`;
+  const st = stOf(g, l.id), d = dOf(g, l.id), t = todayISO(), grMode = S.ui.jmode === "gr";
+  const k = grMode ? (l.kind === "pz" ? "ПЗ" : kindLabel(g, l).toLowerCase().slice(0, 5)) : l.kind === "pz" ? "ПЗ " + (l.pz || "") : l.kind === "cons" ? "конс." : "";
+  return `<th class="lh s-${st}${d === t ? " today" : ""}" data-act="lesson-pop" data-lid="${l.id}" title="${esc(kindLabel(g, l) + ": " + l.topic + " (" + STATUS[st].toLowerCase() + ")")}"><span class="k">${esc(k)}</span><span class="n">${esc(grMode && l.kind === "pz" && l.pz ? l.pz : no[l.id])}</span><span class="d">${fmtD(d) || "—"}</span></th>`;
 }
-function cellView(g, s, l) {
-  const m = mk(g, s.id, l.id), a = m.a, v = m.g;
+function cellView(g, s, l, mode) {
+  const m = mk(g, s.id, l.id), a = mode === "gr" ? null : m.a, v = mode === "att" ? null : m.g;
   let cls = "cell", txt = "";
-  if (v) { cls += " " + gcls(v); txt = v; }
+  if (mode === "gr" && !v) { cls += " e"; if (l.graded && stOf(g, l.id) === "done") cls += " miss"; return { cls, txt }; }
+  if (v) { cls += " " + gcls(v); txt = v; if (a === "Н" || a === "У") cls += " abs"; }
   else if (a === "Н") { cls += " a-n"; txt = "н"; }
   else if (a === "У") { cls += " a-u"; txt = "у"; }
   else if (a === "О") { cls += " a-o"; txt = "оп"; }
   else if (a === "Б") cls += " a-p";
   else cls += " e";
-  if (l.graded && !v && stOf(g, l.id) === "done") cls += " miss";
+  if (mode !== "att" && l.graded && !v && stOf(g, l.id) === "done") cls += " miss";
   return { cls, txt };
 }
 function gridAll(g) {
-  const ls = lessonsOf(g).filter(l => l.kind !== "sr" && l.kind !== "exam"), no = numbering(g), ss = students(g), t = todayISO(), st = settings();
+  const mode = S.ui.jmode || "all", kp = mode === "att" ? "a" : mode === "gr" ? "g" : "c";
+  const ls = lessonsOf(g).filter(l => l.kind !== "sr" && l.kind !== "exam" && (mode !== "gr" || l.graded)), no = numbering(g), ss = students(g), t = todayISO(), st = settings();
   const exL = lessonsOf(g).find(l => l.kind === "exam");
   const curL = ls.find(l => dOf(g, l.id) === t) || ls.find(l => ["plan", "moved"].includes(stOf(g, l.id)));
   const nx = ls.length;
   const rows = ss.map((s, r) => { const x = stuStats(g, s); return `<tr class="${x.risk ? "risk" : ""}"><td class="c-no">${r + 1}</td><td class="c-name"><button data-act="student" data-sid="${s.id}" title="${esc(s.name)}">${esc(s.name)}</button></td>
-    ${ls.map((l, c) => { const cv = cellView(g, s, l), m = mk(g, s.id, l.id); return `<td class="${dOf(g, l.id) === t ? "today" : ""}" ${curL && l.id === curL.id ? 'data-col="cur"' : ""}><button class="${cv.cls}" data-k="c:${s.id}:${l.id}" data-r="${r}" data-c="${c}" aria-label="${esc(s.name)}, занятие ${no[l.id]}: ${[m.a ? ATT[m.a].label : "", m.g ? "оценка " + m.g : ""].filter(Boolean).join(", ") || "нет отметки"}">${esc(cv.txt)}</button></td>`; }).join("")}
+    ${ls.map((l, c) => { const cv = cellView(g, s, l, mode), m = mk(g, s.id, l.id); return `<td class="${dOf(g, l.id) === t ? "today" : ""}" ${curL && l.id === curL.id ? 'data-col="cur"' : ""}><button class="${cv.cls}" data-k="${kp}:${s.id}:${l.id}" data-r="${r}" data-c="${c}" aria-label="${esc(s.name)}, занятие ${no[l.id]}: ${[m.a ? ATT[m.a].label : "", m.g ? "оценка " + m.g : ""].filter(Boolean).join(", ") || "нет отметки"}">${esc(cv.txt)}</button></td>`; }).join("")}
     <td class="c-sum c-first ${x.pct != null && x.pct < st.attLow ? "bad" : ""}">${x.pct ?? "—"}${x.pct != null ? "%" : ""}</td>
     <td class="c-sum">${fmtNum(x.avg)}</td>
     <td class="c-sum ${x.debts >= st.debtHigh ? "bad" : ""}">${x.debts || ""}</td>
     ${exL ? `<td><button class="cell ${x.ex ? gcls(x.ex) : "e"}" data-k="x:${s.id}" data-r="${r}" data-c="${nx}" aria-label="${examName(g)}">${esc(x.ex)}</button></td>` : ""}
     <td class="c-sum">${x.fin != null ? `<span class="badge g${x.fin}${x.fc ? " fc" : ""}" title="${x.fc ? "Прогноз по среднему баллу" : "Итоговая оценка"}">${x.fin}</span>` : "—"}</td></tr>`; }).join("");
-  const foot = ls.map(l => { let p = 0, m = 0; for (const s of ss) { const a = mk(g, s.id, l.id).a; if (a) { m++; if (a === "Б" || a === "О") p++; } } return `<td>${m ? p : ""}</td>`; }).join("");
-  return `<div class="legend"><span><span class="cell a-p"></span>был</span><span><span class="cell a-n">н</span>не был</span><span><span class="cell a-u">у</span>уважительная</span><span><span class="cell a-o">оп</span>опоздал</span><span><span class="cell g5">5</span>оценка</span><span><span class="cell miss"></span>работа не сдана</span></div>
+  const foot = ls.map(l => { if (mode === "gr") { const n = ss.map(s => mk(g, s.id, l.id).g).filter(v => /^[2-5]$/.test(v || "")).map(Number); return `<td>${n.length ? fmtNum(n.reduce((a, b) => a + b, 0) / n.length, 1) : ""}</td>`; } let p = 0, m = 0; for (const s of ss) { const a = mk(g, s.id, l.id).a; if (a) { m++; if (a === "Б" || a === "О") p++; } } return `<td>${m ? p : ""}</td>`; }).join("");
+  const lg = { p: `<span><span class="cell a-p"></span>был</span>`, n: `<span><span class="cell a-n">н</span>не был</span>`, u: `<span><span class="cell a-u">у</span>уважительная</span>`, o: `<span><span class="cell a-o">оп</span>опоздал</span>`, g: `<span><span class="cell g5">5</span>оценка</span>`, gn: `<span><span class="cell gn">н</span>не аттестован</span>`, ab: `<span><span class="cell g4 abs">4</span>оценка, но не был</span>`, m: `<span><span class="cell miss"></span>работа не сдана</span>` };
+  const legend = mode === "att" ? lg.p + lg.n + lg.u + lg.o : mode === "gr" ? lg.g + lg.gn + lg.m : lg.p + lg.n + lg.u + lg.o + lg.g + lg.gn + lg.ab + lg.m;
+  return `<div class="jbar"><div class="seg" role="group" aria-label="Что показывать"><button data-act="jmode" data-v="all" aria-pressed="${mode === "all"}">Всё вместе</button><button data-act="jmode" data-v="att" aria-pressed="${mode === "att"}">Посещаемость</button><button data-act="jmode" data-v="gr" aria-pressed="${mode === "gr"}">Оценки</button></div></div>
+  <div class="legend">${legend}</div>
   <div class="grid-wrap" data-scroll="all-${g.id}" data-scroll-to='[data-col="cur"]'><table class="grid"><thead><tr><th class="c-no">№</th><th class="c-name">Студент</th>${ls.map(l => lh(g, l, no)).join("")}
     <th class="c-sum c-first">Посещ.</th><th class="c-sum">Ср. балл</th><th class="c-sum">Долги</th>${exL ? `<th class="c-sum">${examName(g)}</th>` : ""}<th class="c-sum">Итог</th></tr></thead>
-  <tbody>${rows}</tbody><tfoot><tr><td class="c-no"></td><td class="c-name">Было на занятии</td>${foot}<td class="c-first"></td><td></td><td></td>${exL ? "<td></td>" : ""}<td></td></tr></tfoot></table></div>`;
+  <tbody>${rows}</tbody><tfoot><tr><td class="c-no"></td><td class="c-name">${mode === "gr" ? "Средний балл" : "Было на занятии"}</td>${foot}<td class="c-first"></td><td></td><td></td>${exL ? "<td></td>" : ""}<td></td></tr></tfoot></table></div>`;
 }
 function vJournal() {
   const g = curGroup();
   const head = `${groupChips()}`;
   if (!students(g).length) return head + `<div class="card empty"><b>В группе ${esc(g.name)} пока нет студентов</b><span>Вставьте список ФИО — по одному в строке, можно прямо из Excel.</span><button class="btn pri" data-act="manage-group" data-gid="${g.id}">Добавить студентов</button></div>`;
-  return head + tip("journal", `Вся группа в одной таблице: «н» — пропуск, цифра — оценка, итоги справа. Нажмите на клетку, чтобы отметить пропуск или поставить оценку. Нажмите на номер занятия в шапке — отметить всех сразу или открыть занятие.<span class="hide-m"> С клавиатуры: <kbd>Н</kbd> пропуск, <kbd>Б</kbd> был, <kbd>2</kbd>–<kbd>5</kbd> оценка, стрелки — переход.</span>`) + gridAll(g);
+  return head + tip("journal", `Вся группа в одной таблице: «н» — пропуск, цифра — оценка, итоги справа. Переключатель сверху показывает только посещаемость или только оценки. Нажмите на клетку, чтобы отметить пропуск или поставить оценку. Нажмите на номер занятия в шапке — отметить всех сразу или открыть занятие.<span class="hide-m"> С клавиатуры: <kbd>Н</kbd> пропуск, <kbd>Б</kbd> был, <kbd>2</kbd>–<kbd>5</kbd> оценка, стрелки — переход.</span>`) + gridAll(g);
 }
 
 /* ---------- Провести занятие ---------- */
@@ -1184,16 +1192,19 @@ function closeDrawer() { const d = $("#drawer"); if (d) d.remove(); }
 function cellPop(btn) {
   const k = btn.dataset.k, [t, sid, lid] = k.split(":"); const g = curGroup(); const s = students(g).find(x => x.id === sid);
   const no = numbering(g);
-  const grades = (key, cur) => `<div class="opts">${GR.map(v => `<button class="opt v-${gcls(v)}" data-act="pop-set" data-k="${key}" data-v="${v}" aria-pressed="${cur === v}">${v}</button>`).join("")}</div>`;
+  const grades = (key, cur) => `<div class="opts">${GR.map(v => `<button class="opt v-${gcls(v)}" data-act="pop-set" data-k="${key}" data-v="${v}" aria-pressed="${cur === v}" title="${v === "н" ? "не аттестован" : "оценка " + v}">${v}</button>`).join("")}</div><p class="small muted" style="margin:2px 2px 0">«н» — не аттестован</p>`;
   let body, what, has;
   if (t === "x") {
     const cur = (g.exam || {})[sid]; has = !!cur; what = examName(g);
     body = `<div class="psec">${grades(k, cur)}</div>`;
   } else {
-    const l = lessonsOf(g).find(x => x.id === lid), m = mk(g, sid, lid); has = !!(m.a || m.g);
+    const l = lessonsOf(g).find(x => x.id === lid), m = mk(g, sid, lid);
     what = `Занятие ${no[lid]}${dOf(g, lid) ? ", " + fmtD(dOf(g, lid)) : ""}: ${esc(l.topic.slice(0, 50))}`;
-    body = `<div class="psec"><span class="ctx-l">Посещение</span><div class="opts">${Object.entries(ATT).map(([kk, o]) => `<button class="opt w v-${o.cls}" data-act="pop-set" data-k="a:${sid}:${lid}" data-v="${kk}" aria-pressed="${m.a === kk}">${ATT_WORD[kk]}</button>`).join("")}</div></div>
-      ${l.graded || m.g ? `<div class="psec"><span class="ctx-l">Оценка</span>${grades(`g:${sid}:${lid}`, m.g)}</div>` : ""}`;
+    const att = `<div class="psec"><span class="ctx-l">Посещение</span><div class="opts">${Object.entries(ATT).map(([kk, o]) => `<button class="opt w v-${o.cls}" data-act="pop-set" data-k="a:${sid}:${lid}" data-v="${kk}" aria-pressed="${m.a === kk}">${ATT_WORD[kk]}</button>`).join("")}</div></div>`;
+    const gr = `<div class="psec"><span class="ctx-l">Оценка</span>${grades(`g:${sid}:${lid}`, m.g)}</div>`;
+    if (t === "a") { body = att; has = !!m.a; }
+    else if (t === "g") { body = gr; has = !!m.g; }
+    else { body = att + (l.graded || m.g ? gr : ""); has = !!(m.a || m.g); }
   }
   openPop(btn, `<div class="ttl"><b>${esc(s.name)}</b><br>${what}</div>${body}${has ? `<button class="pclear" data-act="pop-clear" data-k="${k}">${ic("x")}Очистить</button>` : ""}`, { k });
 }
@@ -1208,6 +1219,7 @@ function moveFocus(from, dr, dc) {
 }
 const KEYMAP_A = { "б": "Б", ",": "Б", "+": "Б", "=": "Б", "1": "Б", "н": "Н", "y": "Н", "-": "Н", "0": "Н", "у": "У", "e": "У", "о": "О", "j": "О" };
 const KEYMAP_G = { "2": "2", "3": "3", "4": "4", "5": "5" };
+const KEYMAP_GN = { ...KEYMAP_G, "н": "н", "y": "н" };
 
 /* ================= events ================= */
 document.addEventListener("click", e => {
@@ -1227,9 +1239,10 @@ document.addEventListener("click", e => {
     case "open-journal": S.ui.gid = b.dataset.gid; S.ui.cid = S.groups[b.dataset.gid]?.courseId; S.ui.view = "journal"; render(); scrollTo(0, 0); break;
     case "open-summary": S.ui.view = "journal"; render(); scrollTo(0, 0); break;
     case "start-lesson": { const sg = curGroup(); S.ui.lessonId = defaultLesson(sg); S.ui.lessonGid = sg.id; S.ui.view = "lessons"; S.ui.lessonOpen = true; render(); scrollTo(0, 0); break; }
+    case "jmode": S.ui.jmode = b.dataset.v; closePop(); render(); break;
     case "lessons-list": S.ui.lessonOpen = false; render(); scrollTo(0, 0); break;
     case "toggle-dates": S.ui.datesOpen = !S.ui.datesOpen; render(); break;
-    case "pop-clear": { const [, sid, lid] = popState.k.split(":"); const k0 = popState.k; closePop(); if (k0[0] === "x") markExam(g, sid, ""); else Store.patch(gpath(g), { marks: { [sid]: { [lid]: { a: null, g: null } } } }); break; }
+    case "pop-clear": { const [, sid, lid] = popState.k.split(":"); const k0 = popState.k; closePop(); if (k0[0] === "x") markExam(g, sid, ""); else Store.patch(gpath(g), { marks: { [sid]: { [lid]: k0[0] === "a" ? { a: null } : k0[0] === "g" ? { g: null } : { a: null, g: null } } } }); break; }
     case "sum-sort": e.stopPropagation(); S.ui.sumSort = b.dataset.v; render(); break;
     case "student": openStudent(b.dataset.gid || g.id, b.dataset.sid); break;
     case "go-lesson": closePop(); S.ui.gid = b.dataset.gid; S.ui.cid = S.groups[b.dataset.gid]?.courseId; S.ui.lessonId = b.dataset.lid; S.ui.lessonGid = b.dataset.gid; S.ui.view = "lessons"; S.ui.lessonOpen = true; render(); scrollTo(0, 0); break;
@@ -1315,7 +1328,7 @@ document.addEventListener("keydown", e => {
     if (e.key === "Delete" || e.key === "Backspace") { e.preventDefault(); closePop(); const [tt, sid, lid] = c.dataset.k.split(":"); if (tt === "c") Store.patch(gpath(curGroup()), { marks: { [sid]: { [lid]: { a: null, g: null } } } }); else applyCell(c.dataset.k, ""); return; }
     let ak = c.dataset.k, v = null;
     if (t === "c") { const rest = ak.slice(2); if (KEYMAP_G[key]) { v = KEYMAP_G[key]; ak = "g:" + rest; } else if (KEYMAP_A[key]) { v = KEYMAP_A[key]; ak = "a:" + rest; } }
-    else v = t === "a" ? KEYMAP_A[key] : KEYMAP_G[key];
+    else v = t === "a" ? KEYMAP_A[key] : KEYMAP_GN[key];
     if (v && !e.ctrlKey && !e.metaKey && !e.altKey) { e.preventDefault(); closePop(); applyCell(ak, v); const cell = $("#main").querySelector(`[data-k="${CSS.escape(c.dataset.k)}"]`); if (cell) moveFocus(cell, 1, 0) || cell.focus(); }
     return;
   }
