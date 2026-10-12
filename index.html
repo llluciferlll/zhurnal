@@ -95,6 +95,9 @@ button{cursor:pointer;background:none;border:0;padding:0}
 /* ---------- common ---------- */
 .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 .chips{display:flex;gap:6px;flex-wrap:wrap}
+.chipbar{display:flex;flex-direction:column;gap:10px;min-width:0;max-width:100%}
+.course-seg{flex-wrap:wrap;max-width:100%}
+.course-seg button{max-width:min(340px,100%);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .chip{padding:6px 13px;border-radius:999px;border:1px solid var(--line);background:var(--surface);font-weight:500;font-size:14px;color:var(--ink-2)}
 .chip:hover{border-color:var(--line-2);color:var(--ink)}
 .chip[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--bg)}
@@ -412,7 +415,7 @@ const S = {
   ui: Object.assign({ view: "today", gid: null, tab: "att", lessonId: null, planEdit: false, sumSort: "name", mgid: null }, LS.get("zh-ui", {})),
   readOnly: false
 };
-const saveUI = () => LS.set("zh-ui", { view: S.ui.view, gid: S.ui.gid, tab: S.ui.tab, sumSort: S.ui.sumSort, mgid: S.ui.mgid });
+const saveUI = () => LS.set("zh-ui", { view: S.ui.view, gid: S.ui.gid, cid: S.ui.cid, tab: S.ui.tab, sumSort: S.ui.sumSort, mgid: S.ui.mgid });
 const settings = () => Object.assign({ teacher: "", college: "", attLow: 50, debtHigh: 3 }, S.settings);
 
 /* ================= store ================= */
@@ -501,7 +504,19 @@ const syncText = () => S.mode === "cloud" ? (syncing ? "Сохраняю…" : "
 /* ================= domain ================= */
 const groupsSorted = () => Object.values(S.groups).sort((a, b) => (a.order || 0) - (b.order || 0) || String(a.name).localeCompare(b.name, "ru"));
 const coursesSorted = () => Object.values(S.courses).sort((a, b) => String(a.title).localeCompare(b.title, "ru"));
-const curGroup = () => { let g = S.groups[S.ui.gid]; if (!g) { g = groupsSorted()[0]; if (g) S.ui.gid = g.id; } return g; };
+const cshort = c => c ? (c.short || String(c.title || "").split(" ")[0] || "Дисциплина") : "";
+const activeCourses = () => coursesSorted().filter(c => Object.values(S.groups).some(g => g.courseId === c.id));
+const multiCourse = () => activeCourses().length > 1;
+const curCourseId = () => {
+  const ac = activeCourses(); if (!ac.length) return null;
+  if (!ac.some(c => c.id === S.ui.cid)) { const g0 = S.groups[S.ui.gid]; S.ui.cid = g0 && ac.some(c => c.id === g0.courseId) ? g0.courseId : ac[0].id; }
+  return S.ui.cid;
+};
+const groupsOfCourse = () => multiCourse() ? groupsSorted().filter(g => g.courseId === curCourseId()) : groupsSorted();
+const curGroup = () => { let g = S.groups[S.ui.gid]; const list = groupsOfCourse(); if (!g || (list.length && !list.includes(g))) { g = list[0] || groupsSorted()[0]; if (g) S.ui.gid = g.id; } return g; };
+const gname = g => multiCourse() ? `${g.name} · ${cshort(S.courses[g.courseId])}` : g.name;
+const examName = g => { const e = lessonsOf(g).find(l => l.kind === "exam"); return e && /зач/i.test(e.topic) ? "Зачёт" : "Экзамен"; };
+const kindLabel = (g, l) => l.kind === "exam" ? examName(g) : KINDS[l.kind].label;
 const courseOf = g => (g && S.courses[g.courseId]) || { lessons: [], title: "—" };
 const lessonsOf = g => courseOf(g).lessons || [];
 const attLessons = g => lessonsOf(g).filter(l => l.kind !== "sr" && l.kind !== "exam");
@@ -551,7 +566,7 @@ function grpStats(g) {
   const next = lessonsOf(g).find(l => l.kind !== "sr" && ["plan", "moved"].includes(stOf(g, l.id)));
   return { total: main.length, done, pct: t ? Math.round(p / t * 100) : null, avg: cnt ? sum / cnt : null, risk, next };
 }
-function renumberPZ(ls) { let n = 0; for (const l of ls) { if (l.kind === "pz") l.pz = ++n; else l.pz = null; } return ls; }
+function renumberPZ(ls) { let mx = Math.max(0, ...ls.filter(l => l.kind === "pz" && l.pz).map(l => l.pz)); for (const l of ls) { if (l.kind === "pz") { if (!l.pz) l.pz = ++mx; } else l.pz = null; } return ls; }
 
 /* ================= actions ================= */
 const gpath = g => "groups/" + g.id;
@@ -590,10 +605,10 @@ function openPop(anchor, html, state) {
   anchor.classList && anchor.classList.add("sel");
 }
 function closePop() { if (popState) { popState.el.remove(); popState.anchor?.classList?.remove("sel"); popState = null; } }
-function modal({ title, text, ok = "Подтвердить", danger = false, onOk }) {
+function modal({ title, text, ok = "Подтвердить", danger = false, onOk, alt, onAlt }) {
   const c = document.createElement("div"); c.className = "modal-c";
-  c.innerHTML = `<div class="modal" role="alertdialog" aria-modal="true"><div class="h2">${esc(title)}</div>${text ? `<p>${text}</p>` : ""}<div class="row" style="justify-content:flex-end"><button class="btn ghost" data-m="no">Отмена</button><button class="btn ${danger ? "danger" : "pri"}" data-m="ok">${esc(ok)}</button></div></div>`;
-  c.addEventListener("click", e => { const b = e.target.closest("[data-m]"); if (e.target === c || (b && b.dataset.m === "no")) c.remove(); else if (b) { c.remove(); onOk && onOk(); } });
+  c.innerHTML = `<div class="modal" role="alertdialog" aria-modal="true"><div class="h2">${esc(title)}</div>${text ? `<p>${text}</p>` : ""}<div class="row" style="justify-content:flex-end"><button class="btn ghost" data-m="no">Отмена</button>${alt ? `<button class="btn" data-m="alt">${esc(alt)}</button>` : ""}<button class="btn ${danger ? "danger" : "pri"}" data-m="ok">${esc(ok)}</button></div></div>`;
+  c.addEventListener("click", e => { const b = e.target.closest("[data-m]"); if (e.target === c || (b && b.dataset.m === "no")) c.remove(); else if (b && b.dataset.m === "alt") { c.remove(); onAlt && onAlt(); } else if (b) { c.remove(); onOk && onOk(); } });
   layer.appendChild(c); c.querySelector('[data-m="ok"]').focus();
 }
 function toast(msg, kind) {
@@ -650,7 +665,9 @@ function viewHTML() {
 function emptyAll() {
   return `<div class="card empty"><b>Журнал пока пуст</b><span>Начните с группы: добавьте её название и вставьте список студентов.</span><div class="row" style="justify-content:center"><button class="btn pri" data-act="nav" data-v="groups">${ic("plus")}Добавить группу</button><label class="btn">${ic("up2")}Загрузить из резервной копии<input type="file" accept=".json,application/json" id="imp" hidden></label></div></div>`;
 }
-const groupChips = () => `<div class="chips" role="group" aria-label="Группа">${groupsSorted().map(g => `<button class="chip" data-act="pick-group" data-gid="${g.id}" aria-pressed="${g.id === S.ui.gid}">${esc(g.name)}</button>`).join("")}</div>`;
+const courseSwitch = () => { const ac = activeCourses(); if (ac.length < 2) return ""; const cur = curCourseId();
+  return `<div class="seg course-seg" role="group" aria-label="Дисциплина">${ac.map(c => `<button data-act="pick-course" data-cid="${c.id}" aria-pressed="${c.id === cur}" title="${esc(c.title)}">${esc(c.title)}</button>`).join("")}</div>`; };
+const groupChips = () => `<div class="chipbar">${courseSwitch()}<div class="chips" role="group" aria-label="Группа">${groupsOfCourse().map(g => `<button class="chip" data-act="pick-group" data-gid="${g.id}" aria-pressed="${g.id === S.ui.gid}">${esc(g.name)}</button>`).join("")}</div></div>`;
 
 /* ---------- Сегодня ---------- */
 function vToday() {
@@ -675,7 +692,7 @@ function vToday() {
   risks.sort((a, b) => b.x.debts - a.x.debts || (a.x.pct ?? 101) - (b.x.pct ?? 101));
   const d = new Date();
   const wd = d.toLocaleDateString("ru-RU", { weekday: "long" });
-  const row = it => `<div class="li"><span class="gtag">${esc(it.g.name)}</span><div class="grow"><div class="t">№${esc(it.no)} · ${esc(it.l.topic)}</div><div class="s">${KINDS[it.l.kind].label}${it.d !== t ? " · " + fmtWd(it.d) + ", " + fmtLong(it.d) : ""}</div></div>
+  const row = it => `<div class="li"><span class="gtag">${esc(gname(it.g))}</span><div class="grow"><div class="t">№${esc(it.no)} · ${esc(it.l.topic)}</div><div class="s">${KINDS[it.l.kind].label}${it.d !== t ? " · " + fmtWd(it.d) + ", " + fmtLong(it.d) : ""}</div></div>
       ${it.status === "done" ? `<span class="pill st-done">Проведено</span>` : `<button class="btn sm ${it.d === t ? "pri" : ""}" data-act="go-lesson" data-gid="${it.g.id}" data-lid="${it.l.id}">Провести</button>`}</div>`;
   return `
   <section class="hero"><div><div class="eyebrow">${esc(wd)}${st.teacher ? " · " + esc(st.teacher) : ""}</div><p class="date">${d.toLocaleDateString("ru-RU", { day: "numeric", month: "long" })}, <i>${todays.length ? todays.length + " " + plural(todays.length, "занятие", "занятия", "занятий") + " по плану" : "занятий по плану нет"}</i></p></div>
@@ -689,13 +706,13 @@ function vToday() {
     </section>
     <section class="card"><div class="row" style="justify-content:space-between"><h2 class="h2">Требуют внимания</h2><span class="muted small">${risks.length} ${plural(risks.length, "студент", "студента", "студентов")}</span></div>
       <p class="hint" style="margin:4px 0 6px">Посещаемость ниже ${st.attLow}% или ${st.debtHigh}+ долгов по ПЗ (двойки, «н» и несданные работы).</p>
-      <div class="list">${risks.slice(0, 9).map(r => `<div class="li click" data-act="student" data-gid="${r.g.id}" data-sid="${r.s.id}" tabindex="0" role="button"><div class="grow"><div class="t">${esc(r.s.name)}</div><div class="s">${esc(r.g.name)} · посещ. ${r.x.pct ?? "—"}% · ср. ${fmtNum(r.x.avg)}</div></div><span class="risk-n" title="Долгов">${r.x.debts}</span></div>`).join("") || `<div class="li muted">Никого — все в норме.</div>`}</div>
+      <div class="list">${risks.slice(0, 9).map(r => `<div class="li click" data-act="student" data-gid="${r.g.id}" data-sid="${r.s.id}" tabindex="0" role="button"><div class="grow"><div class="t">${esc(r.s.name)}</div><div class="s">${esc(gname(r.g))} · посещ. ${r.x.pct ?? "—"}% · ср. ${fmtNum(r.x.avg)}</div></div><span class="risk-n" title="Долгов">${r.x.debts}</span></div>`).join("") || `<div class="li muted">Никого — все в норме.</div>`}</div>
       ${risks.length > 9 ? `<button class="btn ghost sm" data-act="open-summary">Все в итогах группы</button>` : ""}
     </section>
   </div>
   <section><div class="row" style="justify-content:space-between;margin-bottom:12px"><h2 class="h2">Группы</h2></div>
     <div class="gcards">${gs.map(g => { const x = grpStats(g), no = numbering(g); return `<button class="gcard" data-act="open-journal" data-gid="${g.id}">
-      <div class="gc-top"><span class="gc-name">${esc(g.name)}</span><span class="muted small">${students(g).length} студ.</span></div>
+      <div class="gc-top"><span class="gc-name">${esc(g.name)}</span><span class="muted small">${students(g).length} студ.</span></div>${multiCourse() ? `<div class="small muted" style="margin-top:-6px">${esc(courseOf(g).title)}</div>` : ""}
       <div><div class="bar"><i style="width:${x.total ? x.done / x.total * 100 : 0}%"></i></div><div class="small muted" style="margin-top:6px">Проведено ${x.done} из ${x.total}</div></div>
       <dl class="gc-stats"><div><dt>Посещаемость</dt><dd>${x.pct ?? "—"}${x.pct != null ? "%" : ""}</dd></div><div><dt>Ср. балл</dt><dd>${fmtNum(x.avg, 1)}</dd></div><div><dt>С долгами</dt><dd style="color:${x.risk ? "var(--g2)" : "inherit"}">${x.risk}</dd></div></dl>
       <div class="gc-next">${x.next ? `Далее: №${esc(no[x.next.id])}${sch(g, x.next.id).plan ? " · " + fmtD(sch(g, x.next.id).plan) : ""} · ${esc(x.next.topic)}` : "Все занятия проведены"}</div></button>`; }).join("")}</div>
@@ -735,12 +752,12 @@ function gridGrades(g) {
   const rows = ss.map((s, r) => { const x = stuStats(g, s); return `<tr class="${x.risk ? "risk" : ""}"><td class="c-no">${r + 1}</td><td class="c-name"><button data-act="student" data-sid="${s.id}" title="${esc(s.name)}">${esc(s.name)}</button></td>
       ${ls.map((l, c) => { const v = mk(g, s.id, l.id).g; const miss = !v && stOf(g, l.id) === "done"; return `<td><button class="cell ${v ? gcls(v) : miss ? "miss" : ""}" data-k="g:${s.id}:${l.id}" data-r="${r}" data-c="${c}" aria-label="${esc(s.name)}, ${gradeLabel(l, no)}: ${v || (miss ? "не сдано" : "нет оценки")}">${esc(v || "")}</button></td>`; }).join("")}
       <td class="c-sum">${fmtNum(x.avg)}</td><td class="c-sum ${x.debts >= settings().debtHigh ? "bad" : ""}">${x.debts || ""}</td>
-      <td><button class="cell ${x.ex ? gcls(x.ex) : ""}" data-k="x:${s.id}" data-r="${r}" data-c="${nx}" aria-label="Экзамен">${esc(x.ex)}</button></td>
+      <td><button class="cell ${x.ex ? gcls(x.ex) : ""}" data-k="x:${s.id}" data-r="${r}" data-c="${nx}" aria-label="${examName(g)}">${esc(x.ex)}</button></td>
       <td class="c-sum ${x.fin != null ? "" : ""}">${x.fin != null ? `<span class="badge g${x.fin} ${x.fc ? "fc" : ""}" title="${x.fc ? "Прогноз по среднему баллу" : "Итоговая оценка"}">${x.fin}</span>` : "—"}</td></tr>`; }).join("");
   const foot = ls.map(l => { const n = ss.map(s => mk(g, s.id, l.id).g).filter(v => /^[2-5]$/.test(v)).map(Number); return `<td>${n.length ? fmtNum(n.reduce((a, b) => a + b, 0) / n.length, 1) : ""}</td>`; }).join("");
   return `<div class="legend"><span><span class="cell g5">5</span></span><span><span class="cell g4">4</span></span><span><span class="cell g3">3</span></span><span><span class="cell g2">2</span></span><span><span class="cell gn">н</span>не аттестован</span><span><span class="cell miss"></span>ПЗ проведено, работа не сдана</span>
     <span class="hint hide-m">Вводите цифры <kbd>2</kbd>–<kbd>5</kbd> или <kbd>Н</kbd> прямо с клавиатуры — курсор сам спустится к следующему студенту.</span></div>
-  <div class="grid-wrap" data-scroll="gr-${g.id}"><table class="grid"><thead><tr><th class="c-no">№</th><th class="c-name">Студент</th>${ls.map(l => lh(g, l, no, l.kind === "pz" && l.pz ? String(l.pz) : no[l.id], l.kind === "pz" ? "ПЗ" : KINDS[l.kind].short)).join("")}<th class="c-sum">Средний балл</th><th class="c-sum">Долги</th><th class="c-sum">Экзамен</th><th class="c-sum">Итог</th></tr></thead>
+  <div class="grid-wrap" data-scroll="gr-${g.id}"><table class="grid"><thead><tr><th class="c-no">№</th><th class="c-name">Студент</th>${ls.map(l => lh(g, l, no, l.kind === "pz" && l.pz ? String(l.pz) : no[l.id], l.kind === "pz" ? "ПЗ" : KINDS[l.kind].short)).join("")}<th class="c-sum">Средний балл</th><th class="c-sum">Долги</th><th class="c-sum">${examName(g)}</th><th class="c-sum">Итог</th></tr></thead>
   <tbody>${rows}</tbody><tfoot><tr><td class="c-no"></td><td class="c-name">Средний по ПЗ</td>${foot}<td></td><td></td><td></td><td></td></tr></tfoot></table></div>`;
 }
 function summary(g) {
@@ -753,14 +770,14 @@ function summary(g) {
   const dist = { 5: 0, 4: 0, 3: 0, 2: 0 }; ss.forEach(r => { if (r.x.fin) dist[r.x.fin]++; });
   return `<div class="stats4"><div class="stat"><b>${gx.done}<span class="muted" style="font-size:15px">/${gx.total}</span></b><span>занятий проведено</span></div><div class="stat"><b>${gx.pct ?? "—"}${gx.pct != null ? "%" : ""}</b><span>посещаемость группы</span></div><div class="stat"><b>${fmtNum(gx.avg)}</b><span>средний балл по ПЗ</span></div><div class="stat"><b style="color:var(--g2)">${gx.risk}</b><span>требуют внимания</span></div></div>
   <div class="row small muted">Итог (прогноз): <span class="badge g5">5</span>×${dist[5]} <span class="badge g4">4</span>×${dist[4]} <span class="badge g3">3</span>×${dist[3]} <span class="badge g2">2</span>×${dist[2]}</div>
-  <div class="tbl-wrap"><table class="stbl"><thead><tr><th>${sb("name", "Студент")}</th><th>${sb("att", "Посещаемость")}</th><th>Пропуски</th><th>${sb("avg", "Ср. балл")}</th><th>${sb("debts", "Долги по ПЗ")}</th><th>Экзамен</th><th>Итог</th></tr></thead><tbody>
+  <div class="tbl-wrap"><table class="stbl"><thead><tr><th>${sb("name", "Студент")}</th><th>${sb("att", "Посещаемость")}</th><th>Пропуски</th><th>${sb("avg", "Ср. балл")}</th><th>${sb("debts", "Долги по ПЗ")}</th><th>${examName(g)}</th><th>Итог</th></tr></thead><tbody>
   ${ss.map(({ s, x }) => `<tr class="click" data-act="student" data-sid="${s.id}" style="cursor:pointer"><td><b style="font-weight:500">${esc(s.name)}</b></td>
     <td><div class="mini"><span class="num" style="min-width:38px">${x.pct ?? "—"}${x.pct != null ? "%" : ""}</span><div class="bar"><i style="width:${x.pct || 0}%;background:${x.pct != null && x.pct < settings().attLow ? "var(--g2)" : "var(--accent)"}"></i></div></div></td>
     <td class="n">${x.abs + x.exc}${x.exc ? `<span class="muted" style="font-weight:400"> (у: ${x.exc})</span>` : ""}</td><td class="n">${fmtNum(x.avg)}</td>
     <td class="n" style="color:${x.debts >= settings().debtHigh ? "var(--g2)" : "inherit"}">${x.debts || "—"}${x.debts ? `<span class="muted" style="font-weight:400;font-size:12px"> ${[x.twos && x.twos + "×2", x.nn && x.nn + "×н", x.miss && x.miss + " не сдано"].filter(Boolean).join(", ")}</span>` : ""}</td>
     <td>${x.ex ? `<span class="badge ${gcls(x.ex)}">${esc(x.ex)}</span>` : "<span class='muted'>—</span>"}</td>
     <td>${x.fin != null ? `<span class="badge g${x.fin} ${x.fc ? "fc" : ""}" title="${x.fc ? "Прогноз по среднему баллу" : "Итоговая"}">${x.fin}</span>` : "—"}</td></tr>`).join("")}
-  </tbody></table></div><p class="hint">Итог считается как в вашей таблице: среднее из среднего балла по ПЗ и оценки за экзамен. Пунктирная рамка — прогноз, пока экзамена нет.</p>`;
+  </tbody></table></div><p class="hint">Итог считается как в вашей таблице: среднее из среднего балла по ПЗ и оценки за ${examName(g) === "Зачёт" ? "дифференцированный зачёт" : "экзамен"}. Пунктирная рамка — прогноз, пока этой оценки нет.</p>`;
 }
 
 /* ---------- Провести занятие ---------- */
@@ -787,13 +804,13 @@ function vLesson() {
     <div class="lm-pick"><button class="icon-btn" data-act="lm-step" data-v="-1" ${idx <= 0 ? "disabled" : ""} aria-label="Предыдущее занятие">${ic("left")}</button>
       <select class="inp" id="lm-sel" data-ch="lm-pick" aria-label="Занятие">${opts}</select>
       <button class="icon-btn" data-act="lm-step" data-v="1" ${idx >= ls.length - 1 ? "disabled" : ""} aria-label="Следующее занятие">${ic("right")}</button></div>
-    <div><div class="eyebrow">${esc(g.name)} · №${esc(no[l.id])} · ${KINDS[l.kind].label}${l.kind === "pz" ? " № " + l.pz : ""}${l.graded ? " · оценивается" : ""}</div><h2 class="lm-topic">${esc(l.topic)}</h2></div>
+    <div><div class="eyebrow">${esc(g.name)} · №${esc(no[l.id])} · ${kindLabel(g, l)}${l.kind === "pz" ? " № " + l.pz : ""}${l.graded ? " · оценивается" : ""}</div><h2 class="lm-topic">${esc(l.topic)}</h2></div>
     <div class="lm-meta"><label class="row small">Дата <input type="date" class="inp" id="lm-date" data-ch="lm-date" value="${esc(s0.fact || s0.plan || todayISO())}"></label>
       ${s0.plan ? `<span class="small muted">по плану ${fmtD(s0.plan)}</span>` : ""}
       <div class="seg" role="group" aria-label="Статус">${Object.entries(STATUS).map(([k, v]) => `<button data-act="set-status" data-lid="${l.id}" data-v="${k}" aria-pressed="${st === k}">${v}</button>`).join("")}</div></div>
   </section>
   ${l.kind !== "exam" ? `<div class="lm-tools"><div class="counter">${pres}<span> из ${ss.length} на занятии${marked < ss.length ? ` · не отмечено ${ss.length - marked}` : ""}</span></div>
-    <div class="row"><button class="btn" data-act="all-present" data-lid="${l.id}">${ic("check")}Остальные — были</button></div></div>` : `<div class="hint">Выставьте экзаменационные оценки — итог пересчитается автоматически.</div>`}
+    <div class="row"><button class="btn" data-act="all-present" data-lid="${l.id}">${ic("check")}Остальные — были</button></div></div>` : `<div class="hint">Выставьте оценки за ${examName(g) === "Зачёт" ? "зачёт" : "экзамен"} — итог пересчитается автоматически.</div>`}
   <ul class="lrows">${ss.map((s, i) => { const a = mk(g, s.id, l.id).a; return `<li class="lrow ${a === "Н" || a === "У" ? "absent" : ""}"><span class="lr-n">${i + 1}</span><button class="lr-name" data-act="student" data-sid="${s.id}">${esc(s.name)}</button>
       ${l.kind !== "exam" ? `<div class="opts" role="group" aria-label="Посещение">${attOpts(s)}</div>` : ""}${graded ? `<div class="opts" role="group" aria-label="Оценка">${grOpts(s)}</div>` : ""}</li>`; }).join("")}</ul>
   <div class="lm-foot"><span class="hint">Отметки сохраняются сразу. Первая отметка автоматически переводит занятие в «Проведено».</span>
@@ -811,14 +828,14 @@ function vPlan() {
     if ((l.section || "") !== sec) { sec = l.section || ""; rows += `<tr class="sec"><td colspan="${ed ? 8 : 7}">${esc(sec || "Без раздела")}${ed ? ` <button class="btn ghost sm" data-act="ce-add" data-after="${i}" data-ref="${i}" style="float:right">${ic("plus")}Занятие в начало раздела</button>` : ""}</td></tr>`; }
     const s = sch(g, l.id), st = s.status || "plan", isT = (s.fact || s.plan) === t;
     if (ed) {
-      rows += `<tr><td class="n">${esc(no[l.id])}</td><td><select data-ch="ce-kind" data-i="${i}" aria-label="Вид">${Object.entries(KINDS).map(([k, v]) => `<option value="${k}" ${l.kind === k ? "selected" : ""}>${v.label}</option>`).join("")}</select></td>
+      rows += `<tr><td class="n">${esc(no[l.id])}</td><td><select data-ch="ce-kind" data-i="${i}" aria-label="Вид">${Object.entries(KINDS).map(([k, v]) => `<option value="${k}" ${l.kind === k ? "selected" : ""}>${v.label}</option>`).join("")}</select>${l.kind === "pz" ? ` <label class="small muted">№<input class="inp" type="number" min="1" max="200" style="width:64px;margin-left:4px" id="ce-p-${l.id}" data-ch="ce-pz" data-i="${i}" value="${l.pz || ""}" aria-label="Номер ПЗ"></label>` : ""}</td>
         <td class="topic"><input class="inp" style="width:100%" id="ce-t-${l.id}" data-ch="ce-topic" data-i="${i}" value="${esc(l.topic)}" aria-label="Тема"></td>
         <td><input class="inp" style="width:56px" type="number" min="1" max="20" id="ce-h-${l.id}" data-ch="ce-hours" data-i="${i}" value="${l.hours || 2}" aria-label="Часы"></td>
         <td><label class="row small"><input type="checkbox" data-ch="ce-graded" data-i="${i}" ${l.graded ? "checked" : ""}> оценка</label></td>
         <td><input class="inp" style="width:100%;min-width:140px" id="ce-s-${l.id}" data-ch="ce-section" data-i="${i}" value="${esc(l.section || "")}" aria-label="Раздел"></td>
         <td style="white-space:nowrap"><button class="icon-btn" data-act="ce-move" data-i="${i}" data-v="-1" aria-label="Выше">${ic("up")}</button><button class="icon-btn" data-act="ce-move" data-i="${i}" data-v="1" aria-label="Ниже">${ic("down")}</button><button class="icon-btn" data-act="ce-add" data-after="${i + 1}" aria-label="Добавить после">${ic("plus")}</button><button class="icon-btn" data-act="ce-del" data-i="${i}" aria-label="Удалить">${ic("trash")}</button></td><td></td></tr>`;
     } else {
-      rows += `<tr class="${st}${isT ? " today" : ""}"><td class="n">${esc(no[l.id])}</td><td><span class="kind ${l.kind}">${l.kind === "pz" ? "ПЗ" + l.pz : KINDS[l.kind].label}</span></td><td class="topic">${esc(l.topic)}</td><td class="n">${l.hours || ""}</td>
+      rows += `<tr class="${st}${isT ? " today" : ""}"><td class="n">${esc(no[l.id])}</td><td><span class="kind ${l.kind}">${l.kind === "pz" ? "ПЗ" + l.pz : kindLabel(g, l)}</span></td><td class="topic">${esc(l.topic)}</td><td class="n">${l.hours || ""}</td>
         <td>${l.kind === "sr" ? "" : `<input type="date" id="pl-${l.id}" data-ch="plan-date" data-lid="${l.id}" value="${esc(s.plan || "")}" aria-label="Дата по плану">`}</td>
         <td>${l.kind === "sr" ? "" : `<input type="date" id="fa-${l.id}" data-ch="fact-date" data-lid="${l.id}" value="${esc(s.fact || "")}" aria-label="Дата фактически">`}</td>
         <td>${l.kind === "sr" ? "" : `<select data-ch="status" data-lid="${l.id}" class="pill st-${st}" style="border:0" aria-label="Статус">${Object.entries(STATUS).map(([k, v]) => `<option value="${k}" ${st === k ? "selected" : ""}>${v}</option>`).join("")}</select>`}</td></tr>`;
@@ -826,7 +843,7 @@ function vPlan() {
   });
   const used = groupsSorted().filter(x => x.courseId === g.courseId).map(x => x.name);
   return `${groupChips()}
-  <div class="stats4"><div class="stat"><b>${x.done}<span class="muted" style="font-size:15px">/${x.total}</span></b><span>занятий проведено</span></div><div class="stat"><b>${x.total - x.done}</b><span>осталось провести</span></div><div class="stat"><b>${consDone}<span class="muted" style="font-size:15px">/${cons.length}</span></b><span>консультаций</span></div><div class="stat"><b>${exam && stOf(g, exam.id) === "done" ? "да" : "нет"}</b><span>экзамен проведён</span></div></div>
+  <div class="stats4"><div class="stat"><b>${x.done}<span class="muted" style="font-size:15px">/${x.total}</span></b><span>занятий проведено</span></div><div class="stat"><b>${x.total - x.done}</b><span>осталось провести</span></div><div class="stat"><b>${consDone}<span class="muted" style="font-size:15px">/${cons.length}</span></b><span>консультаций</span></div><div class="stat"><b>${exam && stOf(g, exam.id) === "done" ? "да" : "нет"}</b><span>${examName(g) === "Зачёт" ? "зачёт проведён" : "экзамен проведён"}</span></div></div>
   ${ed ? "" : `<details class="tool"><summary>Расставить даты по расписанию</summary><div class="body">
     <p class="hint" style="margin:0">Даты получат все ещё не проведённые занятия группы ${esc(g.name)} по порядку КТП. Проведённые и отменённые не трогаются.</p>
     <div class="row"><label class="field">С даты<input type="date" class="inp" id="ad-start" value="${todayISO()}"></label>
@@ -845,7 +862,7 @@ function vGroups() {
   const gs = groupsSorted(); let g = S.groups[S.ui.mgid] || curGroup();
   if (S.ui.newGroup) g = null;
   const cs = coursesSorted();
-  const left = `<div class="glist">${gs.map(x => `<button class="gitem" data-act="mpick" data-gid="${x.id}" aria-pressed="${!S.ui.newGroup && g && x.id === g.id}"><b>${esc(x.name)}</b><span class="muted small">${students(x).length} студ.</span></button>`).join("")}
+  const left = `<div class="glist">${gs.map(x => `<button class="gitem" data-act="mpick" data-gid="${x.id}" aria-pressed="${!S.ui.newGroup && g && x.id === g.id}"><span><b>${esc(x.name)}</b>${multiCourse() ? `<br><span class="muted small">${esc(cshort(S.courses[x.courseId]))}</span>` : ""}</span><span class="muted small">${students(x).length} студ.</span></button>`).join("")}
     <button class="btn" data-act="new-group" style="margin-top:6px">${ic("plus")}Новая группа</button></div>
     <div class="card" style="margin-top:16px;padding:14px"><div class="eyebrow" style="margin-bottom:8px">Дисциплины</div>
       ${cs.map(c => `<div class="srow"><input class="inp" id="ct-${c.id}" data-ch="course-title" data-cid="${c.id}" value="${esc(c.title)}" aria-label="Название дисциплины"><span class="muted small">${(c.lessons || []).length} зан.</span>${groupsSorted().some(x => x.courseId === c.id) ? "" : `<button class="icon-btn" data-act="del-course" data-cid="${c.id}" aria-label="Удалить">${ic("trash")}</button>`}</div>`).join("")}
@@ -876,7 +893,7 @@ function vData() {
   const st = settings(), gs = groupsSorted();
   return `<div class="two"><section class="card" style="display:flex;flex-direction:column;gap:14px"><h2 class="h2">Выгрузка в Excel</h2>
       <p class="muted small" style="margin:0">Для каждой группы — листы «Оценки» и «Посещаемость», плюс КТП с датами и статусами. Удобно для печати и отчёта в учебную часть.</p>
-      <div class="chips">${gs.map(g => `<label class="chip"><input type="checkbox" class="xg" value="${g.id}" checked> ${esc(g.name)}</label>`).join("")}</div>
+      <div class="chips">${gs.map(g => `<label class="chip"><input type="checkbox" class="xg" value="${g.id}" checked> ${esc(gname(g))}</label>`).join("")}</div>
       <div><button class="btn pri" data-act="export-xlsx">${ic("dl")}Скачать .xlsx</button></div>
       <hr style="border:0;border-top:1px solid var(--line);width:100%">
       <h2 class="h2">Резервная копия</h2>
@@ -900,14 +917,14 @@ function openStudent(gid, sid) {
   const absList = attLessons(g).filter(l => ["Н", "У"].includes(mk(g, s.id, l.id).a));
   const c = document.createElement("div"); c.className = "scrim"; c.id = "drawer";
   c.innerHTML = `<div class="drawer" role="dialog" aria-modal="true" aria-label="${esc(s.name)}">
-    <div class="row" style="justify-content:space-between;align-items:flex-start;flex-wrap:nowrap"><div><div class="eyebrow">${esc(g.name)}</div><h2>${esc(s.name)}</h2></div><button class="icon-btn" data-dr="close" aria-label="Закрыть">${ic("x")}</button></div>
+    <div class="row" style="justify-content:space-between;align-items:flex-start;flex-wrap:nowrap"><div><div class="eyebrow">${esc(gname(g))}</div><h2>${esc(s.name)}</h2></div><button class="icon-btn" data-dr="close" aria-label="Закрыть">${ic("x")}</button></div>
     <div class="kv"><div class="stat"><b>${x.pct ?? "—"}${x.pct != null ? "%" : ""}</b><span>посещаемость · пропусков ${x.abs + x.exc}</span></div><div class="stat"><b>${fmtNum(x.avg)}</b><span>средний балл по ПЗ</span></div>
-      <div class="stat"><b style="color:${x.debts ? "var(--g2)" : "inherit"}">${x.debts}</b><span>долгов по ПЗ</span></div><div class="stat"><b>${x.fin ?? "—"}</b><span>${x.fc ? "итог (прогноз)" : "итог"}${x.ex ? " · экзамен " + esc(x.ex) : ""}</span></div></div>
+      <div class="stat"><b style="color:${x.debts ? "var(--g2)" : "inherit"}">${x.debts}</b><span>долгов по ПЗ</span></div><div class="stat"><b>${x.fin ?? "—"}</b><span>${x.fc ? "итог (прогноз)" : "итог"}${x.ex ? " · " + examName(g).toLowerCase() + " " + esc(x.ex) : ""}</span></div></div>
     ${x.debtList.length ? `<div><div class="eyebrow" style="margin-bottom:6px">Долги</div><div class="list">${x.debtList.map(([l, v]) => `<div class="li"><span class="badge ${v ? gcls(v) : "gx"}">${v || "—"}</span><div class="grow"><div class="t">${gradeLabel(l, no)} · ${esc(l.topic)}</div><div class="s">${v === "2" ? "неудовлетворительно" : v === "н" ? "не аттестован" : "работа не сдана"}${dOf(g, l.id) ? " · " + fmtD(dOf(g, l.id)) : ""}</div></div></div>`).join("")}</div></div>` : `<div class="banner" style="background:var(--g5s);border-color:transparent">Долгов по практическим нет.</div>`}
     <div><div class="eyebrow" style="margin-bottom:6px">Оценки</div><div class="row" style="gap:6px">${gradeLessons(g).map(l => { const v = mk(g, s.id, l.id).g; return `<span title="${esc(l.topic)}" style="display:inline-flex;flex-direction:column;align-items:center;gap:2px"><span class="badge ${v ? gcls(v) : "gx"}">${esc(v || "·")}</span><span class="muted" style="font-size:10px">${gradeLabel(l, no)}</span></span>`; }).join("")}</div></div>
     <div><div class="eyebrow" style="margin-bottom:6px">Пропуски · ${absList.length}</div><div class="small" style="color:var(--ink-2)">${absList.map(l => `${fmtD(dOf(g, l.id)) || "№" + no[l.id]}${mk(g, s.id, l.id).a === "У" ? " (у)" : ""}`).join(", ") || "нет"}</div></div>
     <label class="field">Заметка<textarea class="inp" id="dr-note" rows="3" placeholder="Например: договорились о пересдаче ПЗ5 до 20.10">${esc(s.note || "")}</textarea></label>
-    <label class="field">Перевести в группу<select class="inp" id="dr-move"><option value="">—</option>${groupsSorted().filter(o => o.id !== g.id).map(o => `<option value="${o.id}">${esc(o.name)}</option>`).join("")}</select></label>
+    <label class="field">Перевести в группу<select class="inp" id="dr-move"><option value="">—</option>${groupsSorted().filter(o => o.id !== g.id).map(o => `<option value="${o.id}">${esc(gname(o))}</option>`).join("")}</select></label>
   </div>`;
   c.addEventListener("click", e => { if (e.target === c || e.target.closest('[data-dr="close"]')) closeDrawer(); });
   c.querySelector("#dr-note").addEventListener("change", e => { const arr = clone(students(S.groups[gid])).map(o => o.id === sid ? Object.assign(o, { note: e.target.value }) : o); Store.patch(gpath(g), { students: arr }); toast("Заметка сохранена"); });
@@ -931,7 +948,7 @@ function cellPop(btn) {
   let body, cur;
   if (t === "a") { cur = mk(g, sid, lid).a; body = Object.entries(ATT).map(([k, o]) => `<button class="opt v-${o.cls}" data-act="pop-set" data-v="${k}" aria-pressed="${cur === k}">${o.short}</button>`).join(""); }
   else { cur = t === "x" ? (g.exam || {})[sid] : mk(g, sid, lid).g; body = GR.map(k => `<button class="opt v-${gcls(k)}" data-act="pop-set" data-v="${k}" aria-pressed="${cur === k}">${k}</button>`).join(""); }
-  const ttl = `<b>${esc(shortName(s.name))}</b><br>${t === "x" ? "Экзамен" : `${t === "g" ? gradeLabel(l, no) : "№" + no[lid]} · ${esc(l.topic.slice(0, 60))}`}`;
+  const ttl = `<b>${esc(shortName(s.name))}</b><br>${t === "x" ? examName(g) : `${t === "g" ? gradeLabel(l, no) : "№" + no[lid]} · ${esc(l.topic.slice(0, 60))}`}`;
   openPop(btn, `<div class="ttl">${ttl}</div><div class="opts">${body}<span class="sep"></span><button class="opt" data-act="pop-set" data-v="" title="Очистить">${ic("x").replace('class=""', 'style="width:15px;height:15px"')}</button></div>`, { k: btn.dataset.k });
 }
 function applyCell(k, v) {
@@ -954,12 +971,13 @@ document.addEventListener("click", e => {
   switch (a) {
     case "nav": S.ui.view = b.dataset.v; S.ui.newGroup = false; closePop(); render(); scrollTo(0, 0); break;
     case "pick-group": S.ui.gid = b.dataset.gid; render(); break;
-    case "open-journal": S.ui.gid = b.dataset.gid; S.ui.view = "journal"; render(); scrollTo(0, 0); break;
+    case "pick-course": S.ui.cid = b.dataset.cid; S.ui.gid = null; S.ui.lessonId = null; render(); break;
+    case "open-journal": S.ui.gid = b.dataset.gid; S.ui.cid = S.groups[b.dataset.gid]?.courseId; S.ui.view = "journal"; render(); scrollTo(0, 0); break;
     case "open-summary": S.ui.view = "journal"; S.ui.tab = "sum"; S.ui.sumSort = "debts"; render(); break;
     case "tab": S.ui.tab = b.dataset.v; render(); break;
     case "sum-sort": e.stopPropagation(); S.ui.sumSort = b.dataset.v; render(); break;
     case "student": openStudent(b.dataset.gid || g.id, b.dataset.sid); break;
-    case "go-lesson": closePop(); S.ui.gid = b.dataset.gid; S.ui.lessonId = b.dataset.lid; S.ui.lessonGid = b.dataset.gid; S.ui.view = "lesson"; render(); scrollTo(0, 0); break;
+    case "go-lesson": closePop(); S.ui.gid = b.dataset.gid; S.ui.cid = S.groups[b.dataset.gid]?.courseId; S.ui.lessonId = b.dataset.lid; S.ui.lessonGid = b.dataset.gid; S.ui.view = "lesson"; render(); scrollTo(0, 0); break;
     case "pop-set": { const k = popState.k; const v = b.dataset.v; const anchor = popState.anchor; closePop(); applyCell(k, v); const cell = $("#main").querySelector(`[data-k="${CSS.escape(k)}"]`); if (cell) moveFocus(cell, 1, 0) || cell.focus(); break; }
     case "lesson-pop": {
       const lid = b.dataset.lid, l = lessonsOf(g).find(x => x.id === lid), st = stOf(g, lid), no = numbering(g);
@@ -1007,8 +1025,9 @@ document.addEventListener("change", e => {
     case "plan-date": Store.patch(gpath(g), { sched: { [el.dataset.lid]: { plan: el.value || null } } }); break;
     case "fact-date": Store.patch(gpath(g), { sched: { [el.dataset.lid]: { fact: el.value || null } } }); break;
     case "status": setStatus(g, el.dataset.lid, el.value); break;
-    case "ce-topic": case "ce-hours": case "ce-section": case "ce-kind": case "ce-graded": {
+    case "ce-pz": case "ce-topic": case "ce-hours": case "ce-section": case "ce-kind": case "ce-graded": {
       const c = courseOf(g); const ls = clone(c.lessons); const l = ls[+el.dataset.i];
+      if (ch === "ce-pz") l.pz = Math.max(1, +el.value || 0) || l.pz;
       if (ch === "ce-topic") l.topic = el.value.trim() || l.topic;
       if (ch === "ce-hours") l.hours = Math.max(1, +el.value || 2);
       if (ch === "ce-section") l.section = el.value.trim();
@@ -1056,7 +1075,7 @@ document.addEventListener("input", e => {
   if (q.length < 2) { r.hidden = true; return; }
   sHits = []; for (const g of groupsSorted()) for (const s of students(g)) if (s.name.toLowerCase().includes(q)) sHits.push({ g, s });
   sIdx = 0; r.hidden = false;
-  r.innerHTML = sHits.slice(0, 12).map((h, i) => `<button data-sg="${h.g.id}" data-ss="${h.s.id}" class="${i === 0 ? "on" : ""}"><span>${esc(h.s.name)}</span><small>${esc(h.g.name)}</small></button>`).join("") || `<div class="muted small" style="padding:8px">Никого не нашёл</div>`;
+  r.innerHTML = sHits.slice(0, 12).map((h, i) => `<button data-sg="${h.g.id}" data-ss="${h.s.id}" class="${i === 0 ? "on" : ""}"><span>${esc(h.s.name)}</span><small>${esc(gname(h.g))}</small></button>`).join("") || `<div class="muted small" style="padding:8px">Никого не нашёл</div>`;
 });
 document.addEventListener("keydown", e => { if (e.target.id === "q" && e.key === "Enter" && sHits[0]) { openStudent(sHits[0].g.id, sHits[0].s.id); hideSearch(); e.target.value = ""; e.target.blur(); } });
 document.addEventListener("click", e => { const b = e.target.closest("[data-sg]"); if (b) { openStudent(b.dataset.sg, b.dataset.ss); hideSearch(); $("#q").value = ""; } else if (!e.target.closest("#searchbox")) hideSearch(); });
@@ -1103,18 +1122,19 @@ async function exportXlsx() {
   const ids = [...document.querySelectorAll(".xg:checked")].map(i => i.value); if (!ids.length) { toast("Выберите хотя бы одну группу"); return; }
   let X; try { X = await loadXLSX(); } catch (e) { toast("Не удалось загрузить модуль Excel. Проверьте интернет.", "err"); return; }
   const wb = X.utils.book_new(); const usedCourses = new Set();
-  const nm = s => s.replace(/[\\/?*\[\]:]/g, "").slice(0, 31);
+  const nm = s => { let b = s.replace(/[\\/?*\[\]:]/g, "").slice(0, 31), n = b, k = 2; while (wb.SheetNames.includes(n)) n = b.slice(0, 28) + " " + (k++); return n; };
   for (const id of ids) {
     const g = S.groups[id]; const no = numbering(g); usedCourses.add(g.courseId);
     const gl = gradeLessons(g), al = attLessons(g);
-    const A = [[`Группа ${g.name} — журнал успеваемости (${courseOf(g).title})`], [], ["№", "ФИО студента", ...gl.map(l => gradeLabel(l, no)), "Средний балл", "Долги", "Экзамен", "Итог"], ["", "дата", ...gl.map(l => fmtD(dOf(g, l.id))), "", "", "", ""]];
+    const A = [[`Группа ${g.name} — журнал успеваемости (${courseOf(g).title})`], [], ["№", "ФИО студента", ...gl.map(l => gradeLabel(l, no)), "Средний балл", "Долги", examName(g), "Итог"], ["", "дата", ...gl.map(l => fmtD(dOf(g, l.id))), "", "", "", ""]];
     students(g).forEach((s, i) => { const x = stuStats(g, s); A.push([i + 1, s.name, ...gl.map(l => { const v = mk(g, s.id, l.id).g; return /^[2-5]$/.test(v || "") ? +v : (v || ""); }), x.avg != null ? Math.round(x.avg * 100) / 100 : "", x.debts || "", x.ex ? (/^[2-5]$/.test(x.ex) ? +x.ex : x.ex) : "", x.fin ?? ""]); });
     const w1 = X.utils.aoa_to_sheet(A); w1["!cols"] = [{ wch: 4 }, { wch: 34 }, ...gl.map(() => ({ wch: 6 })), { wch: 12 }, { wch: 8 }, { wch: 9 }, { wch: 7 }];
-    X.utils.book_append_sheet(wb, w1, nm("Оценки " + g.name));
+    const sfx = multiCourse() ? " " + cshort(courseOf(g)) : "";
+    X.utils.book_append_sheet(wb, w1, nm("Оценки " + g.name + sfx));
     const B = [[`Группа ${g.name} — посещаемость`], [], ["№", "ФИО студента", ...al.map(l => no[l.id]), "Пропущено", "Посещаемость, %"], ["", "дата", ...al.map(l => fmtD(dOf(g, l.id))), "", ""]];
     students(g).forEach((s, i) => { const x = stuStats(g, s); B.push([i + 1, s.name, ...al.map(l => mk(g, s.id, l.id).a || ""), x.abs + x.exc, x.pct ?? ""]); });
     const w2 = X.utils.aoa_to_sheet(B); w2["!cols"] = [{ wch: 4 }, { wch: 34 }, ...al.map(() => ({ wch: 5 })), { wch: 10 }, { wch: 14 }];
-    X.utils.book_append_sheet(wb, w2, nm("Посещ. " + g.name));
+    X.utils.book_append_sheet(wb, w2, nm("Посещ. " + g.name + sfx));
   }
   const gsel = ids.map(i => S.groups[i]);
   for (const cid of usedCourses) {
@@ -1123,7 +1143,7 @@ async function exportXlsx() {
     let sec = null;
     for (const l of c.lessons || []) { if (l.section !== sec) { sec = l.section; K.push([sec || ""]); } K.push([no[l.id], l.kind === "pz" ? "ПЗ " + l.pz : KINDS[l.kind].label, l.topic, l.hours || "", ...gg.flatMap(g => { const s = sch(g, l.id); return [fmtD(s.plan), fmtD(s.fact), l.kind === "sr" ? "" : STATUS[s.status || "plan"]]; })]); }
     const w = X.utils.aoa_to_sheet(K); w["!cols"] = [{ wch: 5 }, { wch: 12 }, { wch: 60 }, { wch: 6 }, ...gg.flatMap(() => [{ wch: 9 }, { wch: 9 }, { wch: 13 }])];
-    X.utils.book_append_sheet(wb, w, nm("КТП " + (c.title.split(" ")[0] || "")));
+    X.utils.book_append_sheet(wb, w, nm("КТП " + cshort(c)));
   }
   const buf = X.write(wb, { type: "array", bookType: "xlsx" });
   await saveFile(`zhurnal-${todayISO()}.xlsx`, buf);
@@ -1138,7 +1158,15 @@ function importJson(file) {
     let d; try { d = JSON.parse(r.result); } catch (e) { toast("Файл не похож на копию журнала", "err"); return; }
     if (!d || d.app !== "zhurnal" || !d.groups || !d.courses) { toast("Это не резервная копия журнала", "err"); return; }
     const ng = Object.keys(d.groups).length, ns = Object.values(d.groups).reduce((a, g) => a + (g.students || []).length, 0);
-    modal({ title: "Восстановить из копии?", text: `В копии от ${esc(String(d.exportedAt || "").slice(0, 10))}: ${ng} групп, ${ns} студентов. Текущие данные журнала будут заменены.`, ok: "Заменить данные", danger: true, onOk: () => {
+    const titles = Object.values(d.courses).map(c => c.title).join(", ");
+    const add = () => {
+      for (const [id, c] of Object.entries(d.courses)) Store.set("courses/" + id, c);
+      for (const [id, g] of Object.entries(d.groups)) Store.set("groups/" + id, g);
+      const first = Object.values(d.groups)[0]; if (first) { S.ui.cid = first.courseId; S.ui.gid = first.id; }
+      toast("Данные добавлены в журнал");
+    };
+    if (!Object.keys(S.groups).length) { add(); return; }
+    modal({ title: "Загрузить копию", text: `В файле: ${esc(titles)} — ${ng} ${plural(ng, "группа", "группы", "групп")}, ${ns} ${plural(ns, "студент", "студента", "студентов")}. <br><br><b>Добавить</b> — данные из файла появятся рядом с текущими (совпадающие группы этой же дисциплины обновятся). <b>Заменить всё</b> — журнал станет точной копией файла.`, ok: "Добавить", onOk: add, alt: "Заменить всё", onAlt: () => {
       for (const id of Object.keys(S.groups)) if (!d.groups[id]) Store.remove("groups/" + id);
       for (const id of Object.keys(S.courses)) if (!d.courses[id]) Store.remove("courses/" + id);
       for (const [id, c] of Object.entries(d.courses)) Store.set("courses/" + id, c);
