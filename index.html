@@ -548,6 +548,67 @@ details.more .seg{margin-top:8px;flex-wrap:wrap}
 
 .cell.abs{position:relative}
 .cell.abs::after{content:"н";position:absolute;top:1px;right:3px;font:600 9px/1 var(--f-mono);color:var(--g2)}
+
+/* ---------- reports, lists ---------- */
+.rep-ctl{display:flex;flex-direction:column;gap:12px}
+.rep-ctl .seg{flex-wrap:wrap;align-self:flex-start}
+.report{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:22px;display:flex;flex-direction:column;gap:14px}
+.rep-h h2{font:600 22px var(--f-display);margin:2px 0 6px}
+.rep-h p{margin:2px 0;color:var(--ink-2);font-size:14px}
+.rep-college{font-weight:600;color:var(--ink)!important}
+.rep-scroll{overflow-x:auto}
+.rtbl{border-collapse:collapse;font-size:13.5px;width:100%}
+.rtbl th,.rtbl td{border:1px solid var(--line-2);padding:6px 8px;text-align:center;vertical-align:middle}
+.rtbl th{background:var(--surface-2);font-weight:600;font-size:12.5px}
+.rtbl td.nm{text-align:left;white-space:nowrap}
+.rtbl td.wide{text-align:left;min-width:200px}
+.report.dense .rtbl{font-size:11.5px}
+.report.dense .rtbl th,.report.dense .rtbl td{padding:3px 4px}
+.rep-foot{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;color:var(--ink-2);font-size:13px;margin:6px 0 0}
+.day-h{font-size:13px;font-weight:600;color:var(--ink-2);padding:12px 0 2px;border-bottom:1px solid var(--line)}
+.day-h::first-letter{text-transform:uppercase}
+.legend-d summary{cursor:pointer;font-size:13.5px;color:var(--ink-2);text-decoration:underline;text-underline-offset:3px}
+.legend-d .legend{margin-top:8px}
+.slist{list-style:none;margin:0;padding:0;background:var(--surface);border:1px solid var(--line);border-radius:var(--r)}
+.slist li+li{border-top:1px solid var(--line)}
+.sl-row{display:flex;flex-direction:column;gap:6px;width:100%;text-align:left;padding:12px 14px}
+.sl-top{display:flex;align-items:center;gap:8px}
+.sl-top b{flex:1;font-weight:500}
+.sl-top b.red,.sl-stats .red{color:var(--g2)}
+.sl-n{font:12px var(--f-mono);color:var(--ink-3);width:20px}
+.sl-stats{display:flex;gap:12px;flex-wrap:wrap;font-size:13px;color:var(--ink-2);padding-left:28px}
+.sl-last{display:flex;gap:3px;padding-left:28px}
+.mini-cell{width:24px;height:22px;border-radius:5px;display:grid;place-items:center;font:600 11.5px var(--f-mono);background:var(--surface-2)}
+.mini-cell.a-p::after{content:"";width:5px;height:5px;border-radius:50%;background:var(--g5)}
+.mini-cell.a-n{background:var(--g2s);color:var(--g2)} .mini-cell.a-u{background:var(--g3s);color:var(--g3)} .mini-cell.a-o{background:var(--g4s);color:var(--g4);font-size:9px}
+.mini-cell.g5{color:var(--g5)} .mini-cell.g4{color:var(--g4)} .mini-cell.g3{color:var(--g3)} .mini-cell.g2{color:var(--g2);background:var(--g2s)} .mini-cell.gn{color:var(--gn)}
+@media (max-width:860px){
+  .ctx .chips{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;margin-right:-16px;padding-right:16px}
+  .ctx .chips::-webkit-scrollbar{display:none}
+  .chip{white-space:nowrap;flex:none}
+  .jbar .btn{flex:1 1 100%}
+  .jseg{flex:1 1 100%;overflow-x:auto}
+  .jseg button{flex:1;white-space:nowrap;padding:7px 6px;font-size:13px}
+  .grid-wrap{max-height:calc(100dvh - 150px)}
+  .report{padding:14px}
+}
+@media print{
+  :root{color-scheme:light}
+  body{background:#fff!important;color:#000!important}
+  .side,.top,.tabbar,#layer,.toasts,.rep-ctl,.back,.ctx,.tip,.banner{display:none!important}
+  .shell{display:block!important}
+  .content{padding:0!important}
+  .report{border:0!important;padding:0!important;background:#fff!important;color:#000!important}
+  .report *{color:#000!important}
+  .rtbl th,.rtbl td{border:1px solid #000!important;background:#fff!important}
+  .rep-scroll{overflow:visible}
+  .rtbl{width:100%;table-layout:auto}
+  .report.dense .rtbl{font-size:7.5px}
+  .report.dense .rtbl th,.report.dense .rtbl td{padding:1px 2px}
+  .report.dense .rtbl td.nm{font-size:8px}
+  .report.dense .rtbl th{font-size:7.5px}
+  @page{size:A4 landscape;margin:10mm}
+}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 
@@ -598,7 +659,7 @@ const I = {
   x: '<path d="M18 6L6 18M6 6l12 12"/>', plus: '<path d="M12 5v14M5 12h14"/>',
   up: '<path d="M18 15l-6-6-6 6"/>', down: '<path d="M6 9l6 6 6-6"/>', left: '<path d="M15 18l-6-6 6-6"/>', right: '<path d="M9 18l6-6-6-6"/>',
   trash: '<path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/>', dl: '<path d="M12 3v12M7 10l5 5 5-5M5 21h14"/>', up2: '<path d="M12 21V9M7 14l5-5 5 5M5 3h14"/>',
-  check: '<path d="M20 6L9 17l-5-5"/>', help: '<circle cx="12" cy="12" r="9"/><path d="M9.5 9.3a2.6 2.6 0 0 1 5 .9c0 1.7-2.5 2.2-2.5 3.8"/><path d="M12 17.3h.01"/>', sort: '<path d="M3 6h13M3 12h9M3 18h5M17 8v12M14 17l3 3 3-3"/>', gear: '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>'
+  check: '<path d="M20 6L9 17l-5-5"/>', undo: '<path d="M9 14L4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 0 10h-3"/>', print: '<path d="M6 9V2h12v7"/><rect x="3" y="9" width="18" height="8" rx="2"/><path d="M6 14h12v8H6z"/>', report: '<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>', help: '<circle cx="12" cy="12" r="9"/><path d="M9.5 9.3a2.6 2.6 0 0 1 5 .9c0 1.7-2.5 2.2-2.5 3.8"/><path d="M12 17.3h.01"/>', sort: '<path d="M3 6h13M3 12h9M3 18h5M17 8v12M14 17l3 3 3-3"/>', gear: '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>'
 };
 const ic = (n, cls = "") => `<svg class="${cls}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${I[n]}</svg>`;
 
@@ -611,10 +672,10 @@ const gcls = v => v === "н" ? "gn" : "g" + v;
 /* ================= state ================= */
 const S = {
   mode: "connecting", courses: {}, groups: {}, settings: {}, loaded: { courses: false, groups: false },
-  ui: Object.assign({ view: "today", gid: null, tab: "att", lessonId: null, planEdit: false, sumSort: "name", mgid: null }, LS.get("zh-ui", {})),
+  ui: Object.assign({ view: "today", gid: null, lessonId: null, planEdit: false, mgid: null }, LS.get("zh-ui", {})),
   readOnly: false
 };
-const saveUI = () => LS.set("zh-ui", { jmode: S.ui.jmode, view: S.ui.view, gid: S.ui.gid, cid: S.ui.cid, tab: S.ui.tab, sumSort: S.ui.sumSort, mgid: S.ui.mgid });
+const saveUI = () => LS.set("zh-ui", { rosterSync: S.ui.rosterSync, jmode: S.ui.jmode, view: S.ui.view, gid: S.ui.gid, cid: S.ui.cid, mgid: S.ui.mgid });
 const settings = () => Object.assign({ teacher: "", college: "", attLow: 50, debtHigh: 3 }, S.settings);
 
 /* ================= store ================= */
@@ -654,9 +715,41 @@ const Store = {
     if (path === "meta/settings") { S.settings = set ? clone(data) : merge(S.settings || {}, data); return; }
     const m = S[c]; if (set || !m[id]) m[id] = Object.assign(clone(data), { id }); else merge(m[id], data);
   },
-  patch(path, data) { this.apply(path, data, false); const q = this.pending[path]; if (q) merge(q.data, data); else this.pending[path] = { set: false, data: clone(data) }; this.later(path); render(); },
-  set(path, data) { this.deleted.delete(path); this.apply(path, data, true); this.pending[path] = { set: true, data: clone(data) }; this.later(path, 50); render(); },
+  undo: [], noUndo: false, seq: 0,
+  stamp(path, data) {
+    if (!/^(groups|courses)\//.test(path)) return;
+    const now = Date.now(); data.ut = now;
+    if (isObj(data.marks)) for (const sid in data.marks) { const m = data.marks[sid]; if (isObj(m)) for (const lid in m) if (isObj(m[lid])) m[lid].t = now; }
+    if (isObj(data.sched)) for (const lid in data.sched) if (isObj(data.sched[lid])) data.sched[lid].t = now;
+    if (isObj(data.exam)) { data.examT = data.examT || {}; for (const sid in data.exam) data.examT[sid] = now; }
+  },
+  pushUndo(path) {
+    if (this.noUndo || !/^(groups|courses)\//.test(path)) return;
+    const last = this.undo[this.undo.length - 1], cur = this.local(path);
+    if (last && last.seq === this.seq) { if (!last.items.some(i => i.path === path)) last.items.push({ path, prev: cur ? clone(cur) : null }); return; }
+    this.undo.push({ seq: this.seq, items: [{ path, prev: cur ? clone(cur) : null }] });
+    if (this.undo.length > 40) this.undo.shift(); updateUndoBtn();
+  },
+  doUndo() {
+    const u = this.undo.pop(); if (!u) { toast("Отменять нечего"); return; }
+    this.noUndo = true;
+    for (const it of u.items) { if (it.prev) { const d = clone(it.prev); d.ut = Date.now(); this.set(it.path, d); } else this.remove(it.path); }
+    this.noUndo = false; updateUndoBtn(); toast("Последнее действие отменено");
+  },
+  patch(path, data) {
+    this.stamp(path, data); this.pushUndo(path);
+    this.apply(path, data, false);
+    if (S.mode === "local") { this.saveLocal(); render(); return; }
+    const q = this.pending[path]; if (q) merge(q.data, data); else this.pending[path] = { set: false, data: clone(data) }; this.later(path); render();
+  },
+  set(path, data) {
+    this.pushUndo(path); this.deleted.delete(path); this.apply(path, data, true);
+    if (S.mode === "local") { this.saveLocal(); render(); return; }
+    this.pending[path] = { set: true, data: clone(data) }; this.later(path, 50); render();
+  },
+  flushAll() { for (const p of Object.keys(this.pending)) { clearTimeout(this.timers[p]); this.flush(p); } },
   async remove(path) {
+    this.pushUndo(path);
     const [c, id] = path.split("/"); delete this.pending[path]; clearTimeout(this.timers[path]);
     this.deleted.add(path); delete S[c][id]; render();
     if (S.mode === "cloud") { try { await this.db.doc(path).delete(); } catch (e) { this.fail(e); } } else this.saveLocal();
@@ -697,6 +790,10 @@ const Store = {
   }
 };
 let syncing = false;
+for (const ev of ["click", "change", "keydown"]) document.addEventListener(ev, () => { Store.seq++; }, true);
+function updateUndoBtn() { const b = $("#undo-btn"); if (b) b.hidden = !Store.undo.length; }
+document.addEventListener("visibilitychange", () => { if (document.visibilityState === "hidden") { if (S.mode === "local") Store.saveLocal(); else Store.flushAll(); } });
+addEventListener("pagehide", () => { if (S.mode === "local") Store.saveLocal(); else Store.flushAll(); });
 function setSync(v) { syncing = v; const el = $("#syncdot"); if (el) { el.className = "dot " + (v ? "warn" : S.mode === "cloud" ? "ok" : "warn"); } const t = $("#synctxt"); if (t) t.textContent = syncText(); }
 const syncText = () => S.mode === "cloud" ? (syncing ? "Сохраняю…" : "Сохранено в облаке") : S.mode === "local" ? (STANDALONE ? "Данные хранятся на этом устройстве" : "Данные только в этом браузере") : "Подключаюсь…";
 
@@ -762,11 +859,19 @@ function grpStats(g) {
   const done = main.filter(l => stOf(g, l.id) === "done").length;
   let p = 0, t = 0, sum = 0, cnt = 0, risk = 0;
   for (const s of students(g)) { const st = stuStats(g, s); p += st.pres + st.late; t += st.tot; if (st.avg != null) { sum += st.avg; cnt++; } if (st.risk) risk++; }
-  const next = lessonsOf(g).find(l => l.kind !== "sr" && ["plan", "moved"].includes(stOf(g, l.id)));
+  const next = nextLesson(g);
   return { total: main.length, done, pct: t ? Math.round(p / t * 100) : null, avg: cnt ? sum / cnt : null, risk, next };
 }
 function renumberPZ(ls) { let mx = Math.max(0, ...ls.filter(l => l.kind === "pz" && l.pz).map(l => l.pz)); for (const l of ls) { if (l.kind === "pz") { if (!l.pz) l.pz = ++mx; } else l.pz = null; } return ls; }
 
+function nextLesson(g) {
+  const ls = lessonsOf(g).filter(l => l.kind !== "sr"), t = todayISO();
+  const open = l => ["plan", "moved"].includes(stOf(g, l.id));
+  const dated = ls.filter(l => open(l) && dOf(g, l.id) >= t).sort((a, b) => dOf(g, a.id).localeCompare(dOf(g, b.id)));
+  if (dated.length) return dated[0];
+  let lastDone = -1; ls.forEach((l, i) => { if (stOf(g, l.id) === "done") lastDone = i; });
+  return ls.slice(lastDone + 1).find(open) || ls.find(open) || null;
+}
 /* ================= actions ================= */
 const gpath = g => "groups/" + g.id;
 function markAtt(g, sid, lid, v) {
@@ -850,7 +955,7 @@ function renderChrome() {
     top.dataset.ready = 1;
     top.innerHTML = `<h1 id="ttl"></h1><div class="sp"></div>
       <div class="search" id="searchbox">${ic("search")}<input id="q" type="search" placeholder="Найти студента" autocomplete="off" aria-label="Найти студента"><div class="sres" id="sres" hidden></div></div>
-      <button class="icon-btn" data-act="help" aria-label="Как пользоваться" title="Как пользоваться">${ic("help")}</button><button class="icon-btn only-m" data-act="nav" data-v="data" aria-label="Экспорт и настройки">${ic("gear")}</button>`;
+      <button class="icon-btn" id="undo-btn" data-act="undo" hidden aria-label="Отменить последнее действие" title="Отменить последнее действие (Ctrl+Z)">${ic("undo")}</button><button class="icon-btn" data-act="help" aria-label="Как пользоваться" title="Как пользоваться">${ic("help")}</button><button class="icon-btn only-m" data-act="nav" data-v="data" aria-label="Экспорт и настройки">${ic("gear")}</button>`;
   }
   $("#ttl").textContent = title;
   $("#tabbar").innerHTML = VIEWS.slice(0, 4).map(([id, l, i]) => `<button data-act="nav" data-v="${id}" ${v === id ? 'aria-current="page"' : ""}>${ic(i)}${l}</button>`).join("");
@@ -858,7 +963,7 @@ function renderChrome() {
 function viewHTML() {
   if (!S.loaded.courses || !S.loaded.groups) return `<div class="skel"></div><div class="skel"></div>`;
   let pre = "";
-  if (S.mode === "local" && STANDALONE) pre = backupNudge();
+  if (S.mode === "local" && STANDALONE) pre = S.ui.view === "today" ? backupNudge() : "";
   else if (S.mode === "local") pre = `<div class="banner">Облачное хранилище здесь недоступно, поэтому данные сохраняются только в этом браузере. Откройте журнал по ссылке из Claude, чтобы всё синхронизировалось между устройствами.</div>`;
   if (S.readOnly) pre += `<div class="banner">Режим просмотра: изменения не сохраняются.</div>`;
   const v = S.ui.view;
@@ -869,7 +974,6 @@ function emptyAll() {
   return `<div class="card empty"><b>Журнал пока пуст</b><span>Начните с группы: добавьте её название и вставьте список студентов.</span><div class="row" style="justify-content:center"><button class="btn pri" data-act="nav" data-v="groups">${ic("plus")}Добавить группу</button><label class="btn">${ic("up2")}Загрузить из резервной копии<input type="file" accept=".json,application/json" id="imp" hidden></label></div></div>`;
 }
 const tip = (id, html) => LS.get("zh-tip-" + id, false) ? "" : `<div class="tip" role="note"><span class="tip-i" aria-hidden="true">?</span><div class="tip-b">${html}</div><button class="icon-btn tip-x" data-act="tip-close" data-id="${id}" aria-label="Скрыть подсказку">${ic("x")}</button></div>`;
-const lead = (text, actions = "") => `<div class="lead"><p>${text}</p>${actions ? `<div class="row">${actions}</div>` : ""}</div>`;
 const groupChips = () => {
   const ac = activeCourses(), cur = curCourseId(), list = groupsOfCourse();
   const course = ac.length > 1 ? `<label class="ctx-f ctx-course"><span class="ctx-l">Дисциплина</span><select class="inp ctx-sel" id="ctx-course" data-ch="pick-course">${ac.map(c => `<option value="${c.id}" ${c.id === cur ? "selected" : ""}>${esc(c.title)}</option>`).join("")}</select></label>` : "";
@@ -894,15 +998,16 @@ function vToday() {
   }
   up.sort((a, b) => a.d.localeCompare(b.d) || (a.g.order || 0) - (b.g.order || 0));
   over.sort((a, b) => a.d.localeCompare(b.d));
-  const risks = [];
-  for (const g of gs) for (const s of students(g)) { const x = stuStats(g, s); if (x.risk) risks.push({ g, s, x }); }
-  risks.sort((a, b) => b.x.debts - a.x.debts || (a.x.pct ?? 101) - (b.x.pct ?? 101));
+  const rmap = new Map();
+  for (const g of gs) for (const s of students(g)) { const x = stuStats(g, s); if (!x.risk) continue; const key = g.name + "|" + s.name.toLowerCase();
+    const r = rmap.get(key) || { key, s, g, items: [], debts: 0, pct: null }; r.items.push({ g, x }); r.debts += x.debts; if (x.pct != null) r.pct = r.pct == null ? x.pct : Math.min(r.pct, x.pct); rmap.set(key, r); }
+  const risks = [...rmap.values()].sort((a, b) => b.debts - a.debts || (a.pct ?? 101) - (b.pct ?? 101));
   const now = new Date(), h = now.getHours();
   const hello = h < 5 ? "Доброй ночи" : h < 12 ? "Доброе утро" : h < 18 ? "Добрый день" : "Добрый вечер";
-  const name = (st.teacher || "").trim().split(/\s+/).slice(1, 3).join(" ");
+  const nameParts = (st.teacher || "").trim().split(/\s+/).slice(1, 3); const name = nameParts.length && !nameParts.join("").includes(".") ? nameParts.join(" ") : "";
   const dateStr = now.toLocaleDateString("ru-RU", { weekday: "long", day: "numeric", month: "long" });
   const lrow = (it, kind) => `<div class="lrow2">
-      <div class="lr-when">${it.d === t ? "сегодня" : `<b>${fmtD(it.d)}</b><span>${fmtWd(it.d)}</span>`}</div>
+      ${kind === "week" ? "" : `<div class="lr-when">${it.d === t ? "сегодня" : `<b>${fmtD(it.d)}</b><span>${fmtWd(it.d)}</span>`}</div>`}
       <div class="grow"><div class="t">${esc(it.l.topic)}</div><div class="s">${esc(gname(it.g))}, занятие ${esc(it.no)}, ${kindLabel(it.g, it.l).toLowerCase()}</div></div>
       ${it.status === "done" ? `<span class="pill st-done">Проведено</span>`
         : kind === "over" ? `<div class="row nowrap"><button class="btn sm" data-act="quick-done" data-gid="${it.g.id}" data-lid="${it.l.id}">${ic("check")}Было</button><button class="btn sm ghost" data-act="go-lesson" data-gid="${it.g.id}" data-lid="${it.l.id}">Открыть</button></div>`
@@ -921,12 +1026,12 @@ function vToday() {
         <p class="muted small sec-p">Дата занятия уже прошла, а оно не отмечено. Если оно было, нажмите «Было». Если перенесли, откройте его и поменяйте дату.</p>
         <div class="list">${over.slice(0, 5).map(x => lrow(x, "over")).join("")}</div>${over.length > 5 ? `<button class="linkbtn" data-act="nav" data-v="lessons">Показать все ${over.length} в занятиях</button>` : ""}</section>` : ""}
       ${up.length ? `<section class="card"><div class="sec-h"><h2 class="h2">Ближайшая неделя</h2></div>
-        <div class="list">${up.slice(0, 6).map(x => lrow(x)).join("")}</div>${up.length > 6 ? `<button class="linkbtn" data-act="nav" data-v="lessons">Все даты в занятиях</button>` : ""}</section>` : ""}
+        <div class="list">${(() => { let last = "", out = ""; for (const x of up.slice(0, 12)) { if (x.d !== last) { last = x.d; out += `<div class="day-h">${esc(new Date(x.d + "T12:00").toLocaleDateString("ru-RU", { weekday: "long", day: "numeric", month: "long" }))}</div>`; } out += lrow(x, "week"); } return out; })()}</div>${up.length > 12 ? `<button class="linkbtn" data-act="nav" data-v="lessons">Все даты в занятиях</button>` : ""}</section>` : ""}
     </div>
     <section class="card"><div class="sec-h"><h2 class="h2">Требуют внимания</h2><span class="count red">${risks.length}</span></div>
-      <p class="muted small sec-p">Посещаемость ниже ${st.attLow}% или от ${st.debtHigh} долгов по практическим. Нажмите на студента, чтобы увидеть, что именно он должен.</p>
-      <div class="list">${risks.slice(0, 6).map(r => `<button class="srisk" data-act="student" data-gid="${r.g.id}" data-sid="${r.s.id}"><span class="grow"><span class="t">${esc(r.s.name)}</span><span class="s">${esc(gname(r.g))}</span></span>
-        <span class="tags">${r.x.debts ? `<span class="tag red">${r.x.debts} ${plural(r.x.debts, "долг", "долга", "долгов")}</span>` : ""}${r.x.pct != null && r.x.pct < st.attLow ? `<span class="tag amber">${r.x.pct}% посещ.</span>` : ""}</span></button>`).join("") || `<p class="muted">Все студенты в норме.</p>`}</div>
+      <p class="muted small sec-p">Посещаемость ниже ${st.attLow}% или от ${st.debtHigh} долгов по практическим${multiCourse() ? " (долги по всем дисциплинам вместе)" : ""}. Нажмите на студента, чтобы увидеть, что именно он должен.</p>
+      <div class="list">${risks.slice(0, 6).map(r => `<button class="srisk" data-act="student" data-gid="${r.g.id}" data-sid="${r.s.id}"><span class="grow"><span class="t">${esc(r.s.name)}</span><span class="s">${esc(r.g.name)}${r.items.length > 1 || multiCourse() ? ", " + r.items.map(i => esc(cshort(courseOf(i.g)))).join(" и ") : ""}</span></span>
+        <span class="tags">${r.debts ? `<span class="tag red">${r.debts} ${plural(r.debts, "долг", "долга", "долгов")}</span>` : ""}${r.pct != null && r.pct < st.attLow ? `<span class="tag amber">${r.pct}% посещ.</span>` : ""}</span></button>`).join("") || `<p class="muted">Все студенты в норме.</p>`}</div>
       ${risks.length > 6 ? `<button class="linkbtn" data-act="open-summary">Показать всех в итогах групп</button>` : ""}
     </section>
   </div>
@@ -967,7 +1072,7 @@ function gridAll(g) {
   const mode = S.ui.jmode || "all", kp = mode === "att" ? "a" : mode === "gr" ? "g" : "c";
   const ls = lessonsOf(g).filter(l => l.kind !== "sr" && l.kind !== "exam" && (mode !== "gr" || l.graded)), no = numbering(g), ss = students(g), t = todayISO(), st = settings();
   const exL = lessonsOf(g).find(l => l.kind === "exam");
-  const curL = ls.find(l => dOf(g, l.id) === t) || ls.find(l => ["plan", "moved"].includes(stOf(g, l.id)));
+  const nl0 = nextLesson(g); const curL = ls.find(l => dOf(g, l.id) === t) || (nl0 && ls.find(l => l.id === nl0.id));
   const nx = ls.length;
   const rows = ss.map((s, r) => { const x = stuStats(g, s); return `<tr class="${x.risk ? "risk" : ""}"><td class="c-no">${r + 1}</td><td class="c-name"><button data-act="student" data-sid="${s.id}" title="${esc(s.name)}">${esc(s.name)}</button></td>
     ${ls.map((l, c) => { const cv = cellView(g, s, l, mode), m = mk(g, s.id, l.id); return `<td class="${dOf(g, l.id) === t ? "today" : ""}" ${curL && l.id === curL.id ? 'data-col="cur"' : ""}><button class="${cv.cls}" data-k="${kp}:${s.id}:${l.id}" data-r="${r}" data-c="${c}" aria-label="${esc(s.name)}, занятие ${no[l.id]}: ${[m.a ? ATT[m.a].label : "", m.g ? "оценка " + m.g : ""].filter(Boolean).join(", ") || "нет отметки"}">${esc(cv.txt)}</button></td>`; }).join("")}
@@ -979,17 +1084,91 @@ function gridAll(g) {
   const foot = ls.map(l => { if (mode === "gr") { const n = ss.map(s => mk(g, s.id, l.id).g).filter(v => /^[2-5]$/.test(v || "")).map(Number); return `<td>${n.length ? fmtNum(n.reduce((a, b) => a + b, 0) / n.length, 1) : ""}</td>`; } let p = 0, m = 0; for (const s of ss) { const a = mk(g, s.id, l.id).a; if (a) { m++; if (a === "Б" || a === "О") p++; } } return `<td>${m ? p : ""}</td>`; }).join("");
   const lg = { p: `<span><span class="cell a-p"></span>был</span>`, n: `<span><span class="cell a-n">н</span>не был</span>`, u: `<span><span class="cell a-u">у</span>уважительная</span>`, o: `<span><span class="cell a-o">оп</span>опоздал</span>`, g: `<span><span class="cell g5">5</span>оценка</span>`, gn: `<span><span class="cell gn">н</span>не аттестован</span>`, ab: `<span><span class="cell g4 abs">4</span>оценка, но не был</span>`, m: `<span><span class="cell miss"></span>работа не сдана</span>` };
   const legend = mode === "att" ? lg.p + lg.n + lg.u + lg.o : mode === "gr" ? lg.g + lg.gn + lg.m : lg.p + lg.n + lg.u + lg.o + lg.g + lg.gn + lg.ab + lg.m;
-  return `<div class="jbar"><div class="seg" role="group" aria-label="Что показывать"><button data-act="jmode" data-v="all" aria-pressed="${mode === "all"}">Всё вместе</button><button data-act="jmode" data-v="att" aria-pressed="${mode === "att"}">Посещаемость</button><button data-act="jmode" data-v="gr" aria-pressed="${mode === "gr"}">Оценки</button></div></div>
-  <div class="legend">${legend}</div>
+  return `${journalBar(mode)}
+  ${narrow() ? `<details class="legend-d"><summary>Обозначения</summary><div class="legend">${legend}</div></details>` : `<div class="legend">${legend}</div>`}
   <div class="grid-wrap" data-scroll="all-${g.id}" data-scroll-to='[data-col="cur"]'><table class="grid"><thead><tr><th class="c-no">№</th><th class="c-name">Студент</th>${ls.map(l => lh(g, l, no)).join("")}
     <th class="c-sum c-first">Посещ.</th><th class="c-sum">Ср. балл</th><th class="c-sum">Долги</th>${exL ? `<th class="c-sum">${examName(g)}</th>` : ""}<th class="c-sum">Итог</th></tr></thead>
   <tbody>${rows}</tbody><tfoot><tr><td class="c-no"></td><td class="c-name">${mode === "gr" ? "Средний балл" : "Было на занятии"}</td>${foot}<td class="c-first"></td><td></td><td></td>${exL ? "<td></td>" : ""}<td></td></tr></tfoot></table></div>`;
 }
+const narrow = () => matchMedia("(max-width:860px)").matches;
+function journalBar(mode) {
+  const m = [["all", "Всё вместе"], ["att", "Посещаемость"], ["gr", "Оценки"], ...(narrow() ? [["list", "Студенты"]] : [])];
+  return `<div class="jbar"><div class="seg jseg" role="group" aria-label="Что показывать">${m.map(([k, v]) => `<button data-act="jmode" data-v="${k}" aria-pressed="${mode === k}">${v}</button>`).join("")}</div>
+    <button class="btn" data-act="report-open">${ic("report")}Отчёты и печать</button></div>`;
+}
 function vJournal() {
   const g = curGroup();
+  if (S.ui.report && students(g).length) return vReport(g);
   const head = `${groupChips()}`;
   if (!students(g).length) return head + `<div class="card empty"><b>В группе ${esc(g.name)} пока нет студентов</b><span>Вставьте список ФИО — по одному в строке, можно прямо из Excel.</span><button class="btn pri" data-act="manage-group" data-gid="${g.id}">Добавить студентов</button></div>`;
+  if ((S.ui.jmode || "all") === "list") { if (narrow()) return head + journalBar("list") + vStudentsList(g); S.ui.jmode = "all"; }
   return head + tip("journal", `Вся группа в одной таблице: «н» — пропуск, цифра — оценка, итоги справа. Переключатель сверху показывает только посещаемость или только оценки. Нажмите на клетку, чтобы отметить пропуск или поставить оценку. Нажмите на номер занятия в шапке — отметить всех сразу или открыть занятие.<span class="hide-m"> С клавиатуры: <kbd>Н</kbd> пропуск, <kbd>Б</kbd> был, <kbd>2</kbd>–<kbd>5</kbd> оценка, стрелки — переход.</span>`) + gridAll(g);
+}
+
+/* ---------- Отчёты и печать ---------- */
+const monthStart = t => t.slice(0, 8) + "01";
+function repPeriod(kind) {
+  const t = todayISO();
+  if (kind === "month") return [monthStart(t), t];
+  if (kind === "prev") { const d = new Date(monthStart(t) + "T12:00"); d.setDate(0); const end = isoOf(d); return [monthStart(end), end]; }
+  const g = curGroup(); const ds = lessonsOf(g).map(l => dOf(g, l.id)).filter(Boolean).sort();
+  return [ds[0] || monthStart(t), t];
+}
+function reportData(g, r) {
+  const ss = students(g), no = numbering(g), st = settings(), exL = lessonsOf(g).find(l => l.kind === "exam");
+  const inP = l => { const d = dOf(g, l.id); return d && d >= r.from && d <= r.to && stOf(g, l.id) === "done"; };
+  const per = `за период с ${fmtLong(r.from)} по ${fmtLong(r.to)}`;
+  if (r.type === "abs") {
+    const ls = attLessons(g).filter(inP);
+    const rows = ss.map((s, i) => { let p = 0, n = 0, u = 0, o = 0; const dates = [];
+      for (const l of ls) { const a = mk(g, s.id, l.id).a; if (a === "Б") p++; else if (a === "Н") { n++; dates.push(fmtD(dOf(g, l.id))); } else if (a === "У") { u++; dates.push(fmtD(dOf(g, l.id)) + " (у)"); } else if (a === "О") o++; }
+      const tot = p + n + u + o; return [i + 1, s.name, ls.length, n + u, u, o, tot ? Math.round((p + o) / tot * 100) + "%" : "—", dates.join(", ")]; });
+    return { title: "Пропуски занятий", sub: per + `, проведено занятий: ${ls.length}`, cols: ["№", "ФИО студента", "Занятий", "Пропущено", "из них по уваж. причине", "Опозданий", "Посещаемость", "Даты пропусков"], rows, wide: 7 };
+  }
+  if (r.type === "full") {
+    const ls = attLessons(g).filter(inP);
+    const rows = ss.map((s, i) => { let miss = 0; const cells = ls.map(l => { const m = mk(g, s.id, l.id); if (m.a === "Н" || m.a === "У") miss++; const a = m.a === "Н" ? "н" : m.a === "У" ? "у" : m.a === "О" ? "оп" : ""; return [m.g || "", a].filter(Boolean).join("/"); }); return [i + 1, s.name, ...cells, miss]; });
+    return { title: "Журнал посещаемости и успеваемости", sub: per, cols: ["№", "ФИО студента", ...ls.map(l => fmtD(dOf(g, l.id)) + (l.kind === "pz" ? "\nПЗ" + l.pz : "")), "Пропусков"], rows, dense: true };
+  }
+  const rows = ss.map((s, i) => { const x = stuStats(g, s); return [i + 1, s.name, x.pct != null ? x.pct + "%" : "—", x.abs + x.exc, x.exc, x.avg != null ? fmtNum(x.avg) : "—", x.debts || "", ...(exL ? [x.ex || ""] : []), x.fin != null ? x.fin + (x.fc ? " (прогноз)" : "") : "—"]; });
+  return { title: "Ведомость успеваемости", sub: `на ${fmtLong(todayISO())} ${todayISO().slice(0, 4)} г.`, cols: ["№", "ФИО студента", "Посещаемость", "Пропусков", "из них уваж.", "Средний балл", "Долги по ПЗ", ...(exL ? [examName(g)] : []), "Итог"], rows };
+}
+function vReport(g) {
+  const t = todayISO();
+  const r = S.ui.rep = Object.assign({ type: "sheet", from: monthStart(t), to: t }, S.ui.rep || {});
+  const st = settings(), c = courseOf(g), d = reportData(g, r);
+  const types = [["sheet", "Ведомость успеваемости"], ["abs", "Пропуски за период"], ["full", "Журнал за период"]];
+  return `<button class="back" data-act="report-close">${ic("left")}Журнал группы ${esc(g.name)}</button>${groupChips()}
+  <section class="card rep-ctl">
+    <div class="seg" role="group" aria-label="Вид отчёта">${types.map(([k, v]) => `<button data-act="rep-type" data-v="${k}" aria-pressed="${r.type === k}">${v}</button>`).join("")}</div>
+    ${r.type !== "sheet" ? `<div class="row"><label class="field inline">с <input type="date" class="inp" id="rep-from" data-ch="rep-from" value="${r.from}"></label><label class="field inline">по <input type="date" class="inp" id="rep-to" data-ch="rep-to" value="${r.to}"></label>
+      <button class="btn sm ghost" data-act="rep-period" data-v="month">Этот месяц</button><button class="btn sm ghost" data-act="rep-period" data-v="prev">Прошлый месяц</button><button class="btn sm ghost" data-act="rep-period" data-v="all">Весь семестр</button></div>` : ""}
+    <div class="row">${STANDALONE ? `<button class="btn pri" data-act="report-print">${ic("print")}Печать или PDF</button>` : ""}<button class="btn" data-act="report-xlsx">${ic("dl")}Скачать Excel</button></div>
+  </section>
+  <div class="report${d.dense ? " dense" : ""}" id="print-area">
+    <div class="rep-h">${st.college ? `<p class="rep-college">${esc(st.college)}</p>` : ""}<h2>${esc(d.title)}</h2>
+      <p>Дисциплина: ${esc(c.title)}. Группа: ${esc(g.name)}${st.teacher ? `. Преподаватель: ${esc(st.teacher)}` : ""}${/\.$/.test(st.teacher || "") ? "" : "."}</p><p>${esc(d.sub)}</p></div>
+    <div class="rep-scroll"><table class="rtbl"><thead><tr>${d.cols.map(h => `<th>${esc(h).replace("\n", "<br>")}</th>`).join("")}</tr></thead>
+      <tbody>${d.rows.map(row => `<tr>${row.map((v, i) => `<td class="${i === 1 ? "nm" : i === d.wide ? "wide" : ""}">${esc(v)}</td>`).join("")}</tr>`).join("")}</tbody></table></div>
+    <p class="rep-foot">Сформировано ${fmtD(t)}.${t.slice(0, 4)}${st.teacher ? `<span>Преподаватель ____________ ${esc(st.teacher)}</span>` : ""}</p>
+  </div>`;
+}
+async function reportXlsx(g) {
+  let X; try { X = await loadXLSX(); } catch (e) { toast("Не удалось загрузить модуль Excel. Проверьте интернет.", "err"); return; }
+  const st = settings(), d = reportData(g, S.ui.rep), c = courseOf(g);
+  const A = [...(st.college ? [[st.college]] : []), [d.title], [`Дисциплина: ${c.title}. Группа: ${g.name}${st.teacher ? ". Преподаватель: " + st.teacher : ""}`], [d.sub], [], d.cols.map(h => h.replace("\n", " ")), ...d.rows];
+  const ws = X.utils.aoa_to_sheet(A); ws["!cols"] = d.cols.map((h, i) => ({ wch: i === 0 ? 4 : i === 1 ? 34 : i === d.wide ? 40 : Math.max(8, Math.min(16, h.length + 2)) }));
+  const wb = X.utils.book_new(); X.utils.book_append_sheet(wb, ws, d.title.slice(0, 31));
+  await saveFile(`${d.title.split(" ")[0].toLowerCase() === "ведомость" ? "vedomost" : d.title.startsWith("Пропуски") ? "propuski" : "zhurnal-period"}-${g.name}-${todayISO()}.xlsx`.replace(/[^\w.\-]+/g, "_"), X.write(wb, { type: "array", bookType: "xlsx" }));
+}
+function vStudentsList(g) {
+  const ss = students(g), st = settings();
+  const ls = attLessons(g).filter(l => stOf(g, l.id) === "done").slice(-8);
+  return `<ul class="slist">${ss.map((s, i) => { const x = stuStats(g, s); return `<li><button class="sl-row" data-act="student" data-sid="${s.id}">
+    <span class="sl-top"><span class="sl-n">${i + 1}</span><b class="${x.risk ? "red" : ""}">${esc(s.name)}</b>${x.fin != null ? `<span class="badge g${x.fin}${x.fc ? " fc" : ""}">${x.fin}</span>` : ""}</span>
+    <span class="sl-stats"><span>${x.pct ?? "—"}${x.pct != null ? "%" : ""} посещ.</span><span>ср. ${fmtNum(x.avg, 1)}</span><span class="${x.debts >= st.debtHigh ? "red" : ""}">${x.debts} ${plural(x.debts, "долг", "долга", "долгов")}</span></span>
+    <span class="sl-last">${ls.map(l => { const cv = cellView(g, s, l, "all"); return `<span class="${cv.cls.replace("cell", "mini-cell")}">${esc(cv.txt)}</span>`; }).join("")}</span>
+  </button></li>`; }).join("")}</ul><p class="hint">Справа — последние ${ls.length} проведённых занятий по порядку. Нажмите на студента, чтобы открыть его карточку.</p>`;
 }
 
 /* ---------- Провести занятие ---------- */
@@ -998,7 +1177,7 @@ function defaultLesson(g) {
   const tod = ls.filter(l => dOf(g, l.id) === t && stOf(g, l.id) !== "cancel");
   const tu = tod.find(l => stOf(g, l.id) !== "done"); if (tu) return tu.id;
   if (tod.length) return tod[tod.length - 1].id;
-  const nx = ls.find(l => ["plan", "moved"].includes(stOf(g, l.id))); return (nx || ls[ls.length - 1] || {}).id;
+  const nx = nextLesson(g); return (nx || ls[ls.length - 1] || {}).id;
 }
 const ATT_WORD = { "Б": "Был", "Н": "Нет", "У": "Уваж.", "О": "Опозд." };
 function vLesson() {
@@ -1044,6 +1223,7 @@ function vLessons() {
   if (S.ui.lessonOpen) return vLesson();
   const c = courseOf(g), ls = lessonsOf(g), no = numbering(g), t = todayISO(), ed = S.ui.planEdit;
   const x = grpStats(g), ss = students(g);
+  const hTot = ls.filter(l => l.kind !== "sr").reduce((a, l) => a + (+l.hours || 0), 0), hDone = ls.filter(l => l.kind !== "sr" && stOf(g, l.id) === "done").reduce((a, l) => a + (+l.hours || 0), 0);
   const nid = defaultLesson(g), nl = ls.find(l => l.id === nid);
   let sec = null, rows = "";
   ls.forEach((l, i) => {
@@ -1072,7 +1252,7 @@ function vLessons() {
       <h2 class="next-t">${esc(nl.topic)}</h2><p class="small muted" style="margin:0">Занятие ${esc(no[nl.id])}, ${kindLabel(g, nl).toLowerCase()}${nl.kind === "pz" ? " " + nl.pz : ""}${dOf(g, nl.id) ? ", " + fmtLong(dOf(g, nl.id)) : ""}</p></div>
     <button class="btn pri lg" data-act="go-lesson" data-gid="${g.id}" data-lid="${nl.id}">${ic("lesson")}${stOf(g, nl.id) === "done" ? "Открыть" : "Провести"}</button></section>` : ""}
   ${tip("lessons", "Здесь все занятия группы по порядку. Нажмите на тему, чтобы открыть занятие и отметить студентов. Дату и статус можно поменять прямо в списке.")}
-  <div class="row" style="justify-content:space-between;align-items:flex-end"><div><h2 class="h2">${esc(c.title)}</h2><p class="small muted" style="margin:4px 0 0">Проведено ${x.done} из ${x.total}${x.total - x.done ? `, осталось ${x.total - x.done}` : ""}</p></div>
+  <div class="row" style="justify-content:space-between;align-items:flex-end"><div><h2 class="h2">${esc(c.title)}</h2><p class="small muted" style="margin:4px 0 0">Проведено ${x.done} из ${x.total} занятий${x.total - x.done ? `, осталось ${x.total - x.done}` : ""}. Вычитано ${hDone} из ${hTot} ч.</p></div>
     <div class="row">${ed ? "" : `<button class="btn" data-act="toggle-dates">${ic("today")}Расставить даты</button>`}<button class="btn ${ed ? "pri" : "ghost"}" data-act="plan-edit">${ed ? ic("check") + "Готово" : "Изменить программу"}</button></div></div>
   ${!ed && S.ui.datesOpen ? `<section class="card tool-card"><div class="sec-h"><h2 class="h2">Расставить даты по расписанию</h2><button class="icon-btn" data-act="toggle-dates" aria-label="Закрыть">${ic("x")}</button></div>
     <p class="small muted" style="margin:0">Даты получат все ещё не проведённые занятия группы ${esc(g.name)} по порядку. Проведённые и отменённые не меняются.</p>
@@ -1082,7 +1262,11 @@ function vLessons() {
     <div><button class="btn pri" data-act="auto-dates">Расставить даты</button></div></section>` : ""}
   ${ed ? `<div class="banner">Программа общая для групп: ${esc(used.join(", "))}. Изменения тем и порядка сразу видны во всех этих группах.</div>` : ""}
   <div class="tbl-wrap"><table class="ptbl ${ed ? "" : "ls"}"><thead><tr>${ed ? "<th>№</th><th>Вид</th><th>Тема</th><th>Часы</th><th>Оценка</th><th>Раздел</th><th></th><th></th>" : "<th>№</th><th>Тема</th><th>Дата</th><th>Статус</th><th>Были</th><th></th>"}</tr></thead><tbody>${rows}</tbody></table></div>
-  ${ed ? `<div><button class="btn" data-act="ce-add" data-after="${ls.length}">${ic("plus")}Добавить занятие в конец</button></div>` : ""}`;
+  ${ed ? `<div class="row"><button class="btn" data-act="ce-add" data-after="${ls.length}">${ic("plus")}Добавить занятие в конец</button>${ls.some(l => l.kind === "exam") ? "" : `<button class="btn ghost" data-act="add-exam" data-v="e">${ic("plus")}Добавить экзамен</button><button class="btn ghost" data-act="add-exam" data-v="z">${ic("plus")}Добавить зачёт</button>`}</div>
+  <details class="tool"${ls.length ? "" : " open"}><summary>Вставить темы списком</summary><div class="body">
+    <p class="small muted" style="margin:0">По одной теме в строке, можно скопировать столбец из Word или Excel. Строка с «Раздел…» или «Тема 1.2…» станет разделом. В начале строки «ПЗ», «Практическая работа» или «Лаб» — практическое занятие, «Консультация» — консультация, «Экзамен» или «Зачёт» — аттестация. Остальное — лекции.</p>
+    <textarea class="inp" id="paste-topics" rows="8" placeholder="Тема 1.1. Основы внедрения&#10;ГОСТ Р ИСО/МЭК 12207&#10;ПЗ №1. Разработка сценария внедрения"></textarea>
+    <div><button class="btn pri" data-act="paste-topics">Добавить в конец программы</button></div></div></details>` : ""}`;
 }
 
 /* ---------- Группы ---------- */
@@ -1111,6 +1295,7 @@ function vGroups() {
       <div class="row" style="justify-content:space-between"><h2 class="h2">Студенты · ${ss.length}</h2><div class="row"><button class="btn sm" data-act="sort-az">${ic("sort")}По алфавиту</button></div></div>
       <div>${ss.map((s, i) => `<div class="srow"><span class="lr-n">${i + 1}</span><input class="inp" id="sn-${s.id}" data-ch="s-name" data-sid="${s.id}" value="${esc(s.name)}" aria-label="ФИО"><button class="icon-btn" data-act="s-move" data-i="${i}" data-v="-1" aria-label="Выше" ${i ? "" : "disabled"}>${ic("up")}</button><button class="icon-btn" data-act="s-move" data-i="${i}" data-v="1" aria-label="Ниже" ${i < ss.length - 1 ? "" : "disabled"}>${ic("down")}</button><button class="icon-btn" data-act="s-del" data-sid="${s.id}" aria-label="Удалить студента">${ic("trash")}</button></div>`).join("") || `<p class="muted">Пока никого. Добавьте список ниже.</p>`}</div>
       <label class="field">Добавить студентов — по одному в строке<textarea class="inp" id="add-list" rows="4" placeholder="Фамилия Имя Отчество"></textarea></label>
+      ${twins(g).length ? `<label class="row small" style="flex-wrap:nowrap;align-items:flex-start"><input type="checkbox" data-ch="roster-sync" ${S.ui.rosterSync !== false ? "checked" : ""}><span>Менять список сразу во всех дисциплинах группы ${esc(g.name)} (${twins(g).map(o => esc(cshort(courseOf(o)))).join(", ")} и ${esc(cshort(courseOf(g)))}): добавление, переименование, удаление и сортировка.</span></label>` : ""}
       <div class="row" style="justify-content:space-between"><button class="btn pri" data-act="add-students">${ic("plus")}Добавить</button><button class="btn danger" data-act="del-group">${ic("trash")}Удалить группу</button></div></div>`;
   }
   return `${tip("groups", "Выберите группу слева, чтобы поменять её название или список студентов. Новых студентов можно вставить столбцом прямо из Excel. Чтобы перевести студента в другую группу, откройте его карточку в журнале.")}<div class="gl"><div>${left}</div><div>${right}</div></div>`;
@@ -1131,10 +1316,11 @@ function vData() {
     <section class="card" style="display:flex;flex-direction:column;gap:14px"><h2 class="h2">Настройки</h2>
       <label class="field">Преподаватель<input class="inp" id="set-teacher" data-ch="set" data-f="teacher" value="${esc(st.teacher)}" placeholder="Фамилия И. О."></label>
       <label class="field">Колледж<input class="inp" id="set-college" data-ch="set" data-f="college" value="${esc(st.college)}"></label>
-      <div class="row"><label class="field">Низкая посещаемость, %<input class="inp" type="number" min="0" max="100" id="set-att" data-ch="set" data-f="attLow" value="${st.attLow}" style="width:110px"></label>
+      <div class="row"><label class="field">Низкая посещаемость, %<input class="inp" type="number" min="0" max="100" id="set-att" data-ch="set" data-f="attLow" value="${st.attLow}" min="1" style="width:110px"></label>
         <label class="field">Много долгов, от<input class="inp" type="number" min="1" max="20" id="set-debt" data-ch="set" data-f="debtHigh" value="${st.debtHigh}" style="width:110px"></label></div>
       <p class="hint" style="margin:0">По этим порогам студент попадает в список «Требуют внимания» и подсвечивается красным в журнале.</p>
-      <div class="banner" style="background:var(--surface-2);border-color:var(--line)"><b>Где хранятся данные.</b> ${S.mode === "cloud" ? "В облаке вашего аккаунта Claude: журнал одинаковый на компьютере и телефоне. По умолчанию доступ есть только у вас." : "На этом устройстве, в этом браузере. На другие устройства данные не передаются: чтобы перенести журнал, скачайте копию здесь и восстановите её на другом устройстве. Делайте копию хотя бы раз в неделю."}${lastBackupText()}</div></section></div>`;
+      <div class="banner" style="background:var(--surface-2);border-color:var(--line)"><b>Где хранятся данные.</b> ${S.mode === "cloud" ? "В облаке вашего аккаунта Claude: журнал одинаковый на компьютере и телефоне. По умолчанию доступ есть только у вас." : "На этом устройстве, в этом браузере. На другие устройства данные не передаются: чтобы перенести журнал, скачайте копию здесь и восстановите её на другом устройстве. Делайте копию хотя бы раз в неделю."}${lastBackupText()}</div>
+      ${S.mode === "local" ? `<div class="banner" style="background:var(--surface-2);border-color:var(--line)"><b>Чтобы данные не пропали.</b> ${S.persisted ? "Браузер разрешил хранить журнал постоянно." : "Браузер может очистить данные сайта при нехватке места."} ${S.installed ? "Журнал открыт как приложение с экрана «Домой» — так надёжнее всего." : "Добавьте журнал на экран «Домой» (в меню браузера) и открывайте его оттуда. На iPhone это обязательно: иначе Safari стирает данные сайта, который не открывали 7 дней."} Каждый браузер хранит свой журнал: если открыть сайт в другом браузере, он будет пустым.</div>` : ""}</section></div>`;
 }
 
 /* ---------- Карточка студента ---------- */
@@ -1152,7 +1338,7 @@ function openStudent(gid, sid) {
     <div><div class="eyebrow" style="margin-bottom:6px">Оценки</div><div class="row" style="gap:6px">${gradeLessons(g).map(l => { const v = mk(g, s.id, l.id).g; return `<span title="${esc(l.topic)}" style="display:inline-flex;flex-direction:column;align-items:center;gap:2px"><span class="badge ${v ? gcls(v) : "gx"}">${esc(v || "·")}</span><span class="muted" style="font-size:10px">${gradeLabel(l, no)}</span></span>`; }).join("")}</div></div>
     <div><div class="eyebrow" style="margin-bottom:6px">Пропуски · ${absList.length}</div><div class="small" style="color:var(--ink-2)">${absList.map(l => `${fmtD(dOf(g, l.id)) || "№" + no[l.id]}${mk(g, s.id, l.id).a === "У" ? " (у)" : ""}`).join(", ") || "нет"}</div></div>
     <label class="field">Заметка<textarea class="inp" id="dr-note" rows="3" placeholder="Например: договорились о пересдаче ПЗ5 до 20.10">${esc(s.note || "")}</textarea></label>
-    <label class="field">Перевести в группу<select class="inp" id="dr-move"><option value="">—</option>${groupsSorted().filter(o => o.id !== g.id).map(o => `<option value="${o.id}">${esc(gname(o))}</option>`).join("")}</select></label>
+    <label class="field">Перевести в группу<select class="inp" id="dr-move"><option value="">—</option>${groupsSorted().filter(o => o.id !== g.id && o.courseId === g.courseId).map(o => `<option value="${o.id}">${esc(o.name)}</option>`).join("")}</select></label>
   </div>`;
   c.addEventListener("click", e => { if (e.target === c || e.target.closest('[data-dr="close"]')) closeDrawer(); });
   c.querySelector("#dr-note").addEventListener("change", e => { const arr = clone(students(S.groups[gid])).map(o => o.id === sid ? Object.assign(o, { note: e.target.value }) : o); Store.patch(gpath(g), { students: arr }); toast("Заметка сохранена"); });
@@ -1161,7 +1347,7 @@ function openStudent(gid, sid) {
     modal({ title: "Перевести студента?", text: `${esc(s.name)} будет перенесён в группу ${esc(to.name)} вместе с отметками.`, ok: "Перевести", onOk: () => {
       const gg = S.groups[gid];
       Store.patch(gpath(to), { students: [...clone(students(to)), clone(s)], marks: { [sid]: clone((gg.marks || {})[sid] || {}) }, exam: { [sid]: (gg.exam || {})[sid] || null } });
-      Store.patch(gpath(gg), { students: clone(students(gg)).filter(o => o.id !== sid), marks: { [sid]: null }, exam: { [sid]: null } });
+      Store.patch(gpath(gg), { students: clone(students(gg)).filter(o => o.id !== sid), marks: { [sid]: null }, exam: { [sid]: null }, removed: { [sid]: Date.now() } });
       closeDrawer(); toast("Переведён в " + to.name);
     } });
   });
@@ -1179,7 +1365,9 @@ function openHelp() {
       <div class="legend"><span><span class="cell a-p"></span>был</span><span><span class="cell a-n">н</span>не был</span><span><span class="cell a-u">у</span>уважительная</span><span><span class="cell a-o">оп</span>опоздал</span><span><span class="cell miss"></span>работа не сдана</span></div></section>
     <section><h3>Оценки и итог</h3><p>Средний балл считается по практическим работам. Итог — среднее из среднего балла и оценки за экзамен или зачёт; пока её нет, итог в пунктирной рамке — это прогноз. Долги — двойки и несданные работы на уже проведённых практических.</p></section>
     <section><h3>Группы и студенты</h3><p>Новая группа, список студентов (можно вставить столбец из Excel), переименование и сортировка. Перевести студента в другую группу можно из его карточки — она открывается нажатием на ФИО.</p></section>
-    <section><h3>Где хранятся данные</h3><p>${store}</p></section>
+    <section><h3>Отчёты и печать</h3><p>В журнале кнопка «Отчёты и печать»: ведомость успеваемости, пропуски за месяц или любой период, журнал за период. Отчёт можно распечатать, сохранить в PDF или скачать в Excel.</p></section>
+    <section><h3>Если ошиблись</h3><p>Кнопка со стрелкой назад вверху экрана (или <kbd>Ctrl</kbd>+<kbd>Z</kbd>) отменяет последние действия — отметки, оценки, удаление студента или группы.</p></section>
+    <section><h3>Где хранятся данные</h3><p>${store}${S.mode === "local" ? " Чтобы перенести отметки между телефоном и компьютером, скачайте копию на одном устройстве и загрузите на другом с кнопкой «Объединить» — останутся самые свежие отметки с обоих." : ""}</p></section>
     <section class="hide-m"><h3>Клавиши в журнале</h3><p><kbd>Б</kbd> или <kbd>+</kbd> был, <kbd>Н</kbd> или <kbd>-</kbd> не был, <kbd>У</kbd> уважительная, <kbd>О</kbd> опоздал, <kbd>2</kbd>–<kbd>5</kbd> оценки, <kbd>Del</kbd> убрать, стрелки — переход между клетками.</p></section>
     <div><button class="btn" data-act="tips-reset">Снова показать подсказки на страницах</button></div>
   </div>`;
@@ -1227,23 +1415,33 @@ document.addEventListener("click", e => {
   const b = e.target.closest("[data-act]"); if (!b) return;
   const a = b.dataset.act, g = curGroup();
   switch (a) {
-    case "nav": S.ui.view = b.dataset.v; S.ui.newGroup = false; S.ui.lessonOpen = false; closePop(); render(); scrollTo(0, 0); break;
+    case "nav": S.ui.view = b.dataset.v; S.ui.newGroup = false; S.ui.lessonOpen = false; S.ui.report = false; closePop(); render(); scrollTo(0, 0); break;
     case "pick-group": S.ui.gid = b.dataset.gid; render(); break;
     case "help": closePop(); openHelp(); break;
+    case "undo": closePop(); Store.doUndo(); break;
     case "side-toggle": LS.set("zh-side-mini", !LS.get("zh-side-mini", false)); render(); break;
     case "tip-close": LS.set("zh-tip-" + b.dataset.id, true); render(); break;
     case "tips-reset": ["welcome", "journal", "lessons", "groups"].forEach(k => LS.set("zh-tip-" + k, false)); closeDrawer(); render(); toast("Подсказки снова показаны"); break;
     case "quick-done": setStatus(S.groups[b.dataset.gid], b.dataset.lid, "done"); toast("Занятие отмечено как проведённое"); break;
     case "manage-group": S.ui.view = "groups"; S.ui.mgid = b.dataset.gid; S.ui.newGroup = false; render(); scrollTo(0, 0); break;
     case "pick-course": S.ui.cid = b.dataset.cid; S.ui.gid = null; S.ui.lessonId = null; render(); break;
-    case "open-journal": S.ui.gid = b.dataset.gid; S.ui.cid = S.groups[b.dataset.gid]?.courseId; S.ui.view = "journal"; render(); scrollTo(0, 0); break;
+    case "open-journal": S.ui.report = false; S.ui.gid = b.dataset.gid; S.ui.cid = S.groups[b.dataset.gid]?.courseId; S.ui.view = "journal"; render(); scrollTo(0, 0); break;
     case "open-summary": S.ui.view = "journal"; render(); scrollTo(0, 0); break;
-    case "start-lesson": { const sg = curGroup(); S.ui.lessonId = defaultLesson(sg); S.ui.lessonGid = sg.id; S.ui.view = "lessons"; S.ui.lessonOpen = true; render(); scrollTo(0, 0); break; }
+    case "start-lesson": { const t0 = todayISO(); let sg = curGroup(), lid0 = null;
+      for (const gg of groupsSorted()) { const l0 = lessonsOf(gg).find(l => l.kind !== "sr" && dOf(gg, l.id) === t0 && !["done", "cancel"].includes(stOf(gg, l.id))); if (l0) { sg = gg; lid0 = l0.id; break; } }
+      S.ui.gid = sg.id; S.ui.cid = sg.courseId; S.ui.lessonId = lid0 || defaultLesson(sg); S.ui.lessonGid = sg.id; S.ui.view = "lessons"; S.ui.lessonOpen = true; render(); scrollTo(0, 0); break; }
     case "jmode": S.ui.jmode = b.dataset.v; closePop(); render(); break;
+    case "report-open": S.ui.report = true; closePop(); render(); scrollTo(0, 0); break;
+    case "report-close": S.ui.report = false; render(); scrollTo(0, 0); break;
+    case "rep-type": S.ui.rep = Object.assign(S.ui.rep || {}, { type: b.dataset.v }); render(); break;
+    case "rep-period": { const [f, t2] = repPeriod(b.dataset.v); S.ui.rep = Object.assign(S.ui.rep || {}, { from: f, to: t2 }); render(); break; }
+    case "report-print": window.print(); break;
+    case "report-xlsx": reportXlsx(g); break;
+    case "paste-topics": pasteTopics(g); break;
+    case "add-exam": { const c = courseOf(g); const ls = clone(c.lessons || []); ls.push({ id: uid("l"), kind: "exam", topic: b.dataset.v === "z" ? "Дифференцированный зачёт" : "Экзамен", hours: 2, section: "Промежуточная аттестация", graded: false, pz: null }); Store.patch("courses/" + c.id, { lessons: ls }); toast(b.dataset.v === "z" ? "Зачёт добавлен в программу" : "Экзамен добавлен в программу"); break; }
     case "lessons-list": S.ui.lessonOpen = false; render(); scrollTo(0, 0); break;
     case "toggle-dates": S.ui.datesOpen = !S.ui.datesOpen; render(); break;
     case "pop-clear": { const [, sid, lid] = popState.k.split(":"); const k0 = popState.k; closePop(); if (k0[0] === "x") markExam(g, sid, ""); else Store.patch(gpath(g), { marks: { [sid]: { [lid]: k0[0] === "a" ? { a: null } : k0[0] === "g" ? { g: null } : { a: null, g: null } } } }); break; }
-    case "sum-sort": e.stopPropagation(); S.ui.sumSort = b.dataset.v; render(); break;
     case "student": openStudent(b.dataset.gid || g.id, b.dataset.sid); break;
     case "go-lesson": closePop(); S.ui.gid = b.dataset.gid; S.ui.cid = S.groups[b.dataset.gid]?.courseId; S.ui.lessonId = b.dataset.lid; S.ui.lessonGid = b.dataset.gid; S.ui.view = "lessons"; S.ui.lessonOpen = true; render(); scrollTo(0, 0); break;
     case "pop-set": { const ck = popState.k; const k = b.dataset.k || ck; const v = b.dataset.v; closePop(); applyCell(k, v); const cell = $("#main").querySelector(`[data-k="${CSS.escape(ck)}"]`); if (cell) moveFocus(cell, 1, 0) || cell.focus(); break; }
@@ -1270,10 +1468,12 @@ document.addEventListener("click", e => {
     case "new-group": S.ui.newGroup = true; render(); setTimeout(() => $("#ng-name")?.focus(), 0); break;
     case "cancel-new": S.ui.newGroup = false; render(); break;
     case "create-group": createGroup(); break;
-    case "add-students": { const mg = S.groups[S.ui.mgid] || g; const names = parseNames($("#add-list").value); if (!names.length) { toast("Вставьте хотя бы одно ФИО"); break; } Store.patch(gpath(mg), { students: [...clone(students(mg)), ...names.map(n => ({ id: uid("s"), name: n }))] }); $("#add-list").value = ""; toast(`Добавлено: ${names.length}`); break; }
+    case "add-students": { const mg = S.groups[S.ui.mgid] || g; const names = parseNames($("#add-list").value); if (!names.length) { toast("Вставьте хотя бы одно ФИО"); break; }
+      for (const tg of [mg, ...(syncOn(mg) ? twins(mg) : [])]) { const fresh = names.filter(n => !students(tg).some(x => sameName(x.name, n)) || tg === mg); Store.patch(gpath(tg), { students: [...clone(students(tg)), ...fresh.map(n => ({ id: uid("s"), name: n }))] }); }
+      $("#add-list").value = ""; toast(`Добавлено: ${names.length}${syncOn(mg) ? " — во всех дисциплинах группы" : ""}`); break; }
     case "s-move": { const mg = S.groups[S.ui.mgid] || g; const ss = clone(students(mg)); const i = +b.dataset.i, j = i + +b.dataset.v; if (!ss[j]) break; [ss[i], ss[j]] = [ss[j], ss[i]]; Store.patch(gpath(mg), { students: ss }); break; }
-    case "sort-az": { const mg = S.groups[S.ui.mgid] || g; Store.patch(gpath(mg), { students: clone(students(mg)).sort((x, y) => x.name.localeCompare(y.name, "ru")) }); toast("Отсортировано по алфавиту"); break; }
-    case "s-del": { const mg = S.groups[S.ui.mgid] || g; const s = students(mg).find(x => x.id === b.dataset.sid); modal({ title: "Удалить студента?", text: `${esc(s.name)} и все его отметки будут удалены из группы ${esc(mg.name)}. Если студент переводится — используйте «Перевести в группу» в его карточке.`, ok: "Удалить", danger: true, onOk: () => Store.patch(gpath(mg), { students: clone(students(mg)).filter(x => x.id !== s.id), marks: { [s.id]: null }, exam: { [s.id]: null } }) }); break; }
+    case "sort-az": { const mg = S.groups[S.ui.mgid] || g; for (const tg of [mg, ...(syncOn(mg) ? twins(mg) : [])]) Store.patch(gpath(tg), { students: clone(students(tg)).sort((x, y) => x.name.localeCompare(y.name, "ru")) }); toast("Отсортировано по алфавиту"); break; }
+    case "s-del": { const mg = S.groups[S.ui.mgid] || g; const s = students(mg).find(x => x.id === b.dataset.sid); modal({ title: "Удалить студента?", text: `${esc(s.name)} и все его отметки будут удалены из группы ${esc(mg.name)}${syncOn(mg) ? " во всех её дисциплинах" : ""}. Если студент переводится — используйте «Перевести в группу» в его карточке.`, ok: "Удалить", danger: true, onOk: () => { for (const tg of [mg, ...(syncOn(mg) ? twins(mg) : [])]) { const ts = tg === mg ? s : students(tg).find(x => sameName(x.name, s.name)); if (ts) Store.patch(gpath(tg), { students: clone(students(tg)).filter(x => x.id !== ts.id), marks: { [ts.id]: null }, exam: { [ts.id]: null }, removed: { [ts.id]: Date.now() } }); } } }); break; }
     case "del-group": { const mg = S.groups[S.ui.mgid] || g; modal({ title: `Удалить группу ${mg.name}?`, text: `Удалятся ${students(mg).length} студентов, все оценки и посещаемость. Перед этим можно скачать резервную копию в разделе «Экспорт».`, ok: "Удалить группу", danger: true, onOk: () => { Store.remove(gpath(mg)); S.ui.mgid = null; if (S.ui.gid === mg.id) S.ui.gid = null; toast("Группа удалена"); } }); break; }
     case "new-course": { const t = $("#nc-title").value.trim(); if (!t) { toast("Введите название дисциплины"); break; } const copy = $("#nc-copy")?.checked; const src = coursesSorted()[0]; const id = uid("c"); Store.set("courses/" + id, { title: t, semester: "", lessons: copy && src ? clone(src.lessons).map(l => Object.assign(l, { id: uid("l") })) : [] }); toast("Дисциплина добавлена"); break; }
     case "del-course": { const c = S.courses[b.dataset.cid]; modal({ title: "Удалить дисциплину?", text: `«${esc(c.title)}» и её программа будут удалены.`, ok: "Удалить", danger: true, onOk: () => Store.remove("courses/" + c.id) }); break; }
@@ -1290,6 +1490,8 @@ document.addEventListener("change", e => {
   switch (ch) {
     case "lm-pick": S.ui.lessonId = el.value; render(); break;
     case "pick-course": S.ui.cid = el.value; S.ui.gid = null; S.ui.lessonId = null; render(); break;
+    case "roster-sync": S.ui.rosterSync = el.checked; break;
+    case "rep-from": case "rep-to": if (el.value) { S.ui.rep = Object.assign(S.ui.rep || {}, { [ch === "rep-from" ? "from" : "to"]: el.value }); } break;
     case "lm-date": { if (!el.value) break; const lid = S.ui.lessonId; const p = { plan: el.value, fact: null }; Store.patch(gpath(g), { sched: { [lid]: p } }); break; }
     case "plan-date": Store.patch(gpath(g), { sched: { [el.dataset.lid]: { plan: el.value || null, fact: null } } }); break;
     case "status": setStatus(g, el.dataset.lid, el.value); break;
@@ -1304,20 +1506,26 @@ document.addEventListener("change", e => {
       Store.patch("courses/" + c.id, { lessons: renumberPZ(ls) }); break;
     }
     case "g-name": { const mg = S.groups[S.ui.mgid] || g; if (el.value.trim()) Store.patch(gpath(mg), { name: el.value.trim() }); break; }
-    case "g-course": { const mg = S.groups[S.ui.mgid] || g; Store.patch(gpath(mg), { courseId: el.value }); toast("Дисциплина группы изменена"); break; }
-    case "s-name": { const mg = S.groups[S.ui.mgid] || g; const v = el.value.trim().replace(/\s+/g, " "); if (!v) break; Store.patch(gpath(mg), { students: clone(students(mg)).map(s => s.id === el.dataset.sid ? Object.assign(s, { name: v }) : s) }); break; }
+    case "g-course": { const mg = S.groups[S.ui.mgid] || g; const hasMarks = Object.values(mg.marks || {}).some(m => m && Object.values(m).some(c => c && (c.a || c.g))) || Object.values(mg.sched || {}).some(x => x && x.status === "done");
+      if (hasMarks) { el.value = mg.courseId; toast("У группы уже есть отметки по этой дисциплине — сменить её нельзя, отметки перепутаются. Создайте новую группу для другой дисциплины.", "err"); break; }
+      Store.patch(gpath(mg), { courseId: el.value }); toast("Дисциплина группы изменена"); break; }
+    case "s-name": { const mg = S.groups[S.ui.mgid] || g; const v = el.value.trim().replace(/\s+/g, " "); if (!v) break; const old = (students(mg).find(s => s.id === el.dataset.sid) || {}).name || "";
+      Store.patch(gpath(mg), { students: clone(students(mg)).map(s => s.id === el.dataset.sid ? Object.assign(s, { name: v }) : s) });
+      if (syncOn(mg) && old) for (const tg of twins(mg)) if (students(tg).some(s => sameName(s.name, old))) Store.patch(gpath(tg), { students: clone(students(tg)).map(s => sameName(s.name, old) ? Object.assign(s, { name: v }) : s) });
+      break; }
     case "course-title": if (el.value.trim()) Store.patch("courses/" + el.dataset.cid, { title: el.value.trim() }); break;
-    case "set": { const f = el.dataset.f; let v = el.value; if (f === "attLow" || f === "debtHigh") v = Math.max(0, +v || 0); Store.set("meta/settings", Object.assign({}, S.settings, { [f]: v })); break; }
+    case "set": { const f = el.dataset.f; let v = el.value; const num = (x, d, lo, hi) => { const n = parseInt(x, 10); return isNaN(n) ? d : Math.min(hi, Math.max(lo, n)); };
+      if (f === "attLow") { v = num(v, 50, 1, 100); el.value = v; } if (f === "debtHigh") { v = num(v, 3, 1, 50); el.value = v; }
+      v = typeof v === "string" ? v.trim() : v; Store.set("meta/settings", Object.assign({}, S.settings, { [f]: v, ut: Date.now() })); break; }
   }
   commit();
 });
 document.addEventListener("focusout", () => setTimeout(() => { if (renderPending) { const ae = document.activeElement; if (!(ae && $("#main").contains(ae) && ae.matches("input:not([type=checkbox]),textarea"))) render(); } }, 0));
-document.addEventListener("focusin", e => {
-  // grid cell click opens a popover; keyboard focus does not
-});
-document.addEventListener("mousedown", e => { const c = e.target.closest(".cell[data-k]"); if (c) c.dataset.mouse = "1"; });
+addEventListener("scroll", e => { if (popState && !(e.target.nodeType === 1 && popState.el.contains(e.target))) closePop(); }, true);
+addEventListener("resize", () => closePop());
 document.addEventListener("click", e => { const c = e.target.closest(".cell[data-k]"); if (c && !e.defaultPrevented) { c.focus({ preventScroll: true }); if (popState && popState.k === c.dataset.k) { closePop(); return; } setTimeout(() => cellPop(c), 0); } }, true);
 document.addEventListener("keydown", e => {
+  if ((e.ctrlKey || e.metaKey) && !e.shiftKey && (e.key === "z" || e.key === "я") && !(e.target.matches && e.target.matches("input,textarea,select"))) { e.preventDefault(); closePop(); Store.doUndo(); return; }
   if (e.key === "Escape") { if (popState) { const a = popState.anchor; closePop(); a?.focus?.(); return; } if ($(".modal-c")) { $(".modal-c").remove(); return; } closeDrawer(); hideSearch(); return; }
   const c = e.target.closest && e.target.closest(".cell[data-k]");
   if (c) {
@@ -1337,14 +1545,14 @@ document.addEventListener("keydown", e => {
 });
 
 /* ---------- search ---------- */
-let sIdx = 0, sHits = [];
+let sHits = [];
 function hideSearch() { const r = $("#sres"); if (r) r.hidden = true; }
 document.addEventListener("input", e => {
   if (e.target.id !== "q") return;
   const q = e.target.value.trim().toLowerCase(); const r = $("#sres");
   if (q.length < 2) { r.hidden = true; return; }
   sHits = []; for (const g of groupsSorted()) for (const s of students(g)) if (s.name.toLowerCase().includes(q)) sHits.push({ g, s });
-  sIdx = 0; r.hidden = false;
+  r.hidden = false;
   r.innerHTML = sHits.slice(0, 12).map((h, i) => `<button data-sg="${h.g.id}" data-ss="${h.s.id}" class="${i === 0 ? "on" : ""}"><span>${esc(h.s.name)}</span><small>${esc(gname(h.g))}</small></button>`).join("") || `<div class="muted small" style="padding:8px">Никого не нашёл</div>`;
 });
 document.addEventListener("keydown", e => { if (e.target.id === "q" && e.key === "Enter" && sHits[0]) { openStudent(sHits[0].g.id, sHits[0].s.id); hideSearch(); e.target.value = ""; e.target.blur(); } });
@@ -1352,6 +1560,9 @@ document.addEventListener("click", e => { const b = e.target.closest("[data-sg]"
 
 /* ================= group & plan helpers ================= */
 const parseNames = txt => String(txt || "").split(/\r?\n/).map(s => s.replace(/^\s*\d+[.)]?\s*/, "").replace(/\t.*$/, "").trim().replace(/\s+/g, " ")).filter(Boolean);
+const twins = g => Object.values(S.groups).filter(o => o.id !== g.id && o.name.trim().toLowerCase() === g.name.trim().toLowerCase());
+const syncOn = g => twins(g).length && S.ui.rosterSync !== false;
+const sameName = (a, b) => a.trim().toLowerCase().replace(/ё/g, "е") === b.trim().toLowerCase().replace(/ё/g, "е");
 function createGroup() {
   const name = $("#ng-name").value.trim(); if (!name) { toast("Введите название группы"); $("#ng-name").focus(); return; }
   let cid = $("#ng-course").value;
@@ -1360,6 +1571,23 @@ function createGroup() {
   const order = Math.max(0, ...groupsSorted().map(g => g.order || 0)) + 1;
   Store.set("groups/" + id, { name, courseId: cid, order, students: names.map(n => ({ id: uid("s"), name: n })), sched: {}, marks: {}, exam: {} });
   S.ui.newGroup = false; S.ui.mgid = id; S.ui.gid = id; render(); toast(`Группа ${name} создана${names.length ? ", студентов: " + names.length : ""}`);
+}
+function pasteTopics(g) {
+  const ta = $("#paste-topics"); const lines = String(ta?.value || "").split(/\r?\n/).map(x => x.trim()).filter(Boolean);
+  if (!lines.length) { toast("Вставьте темы — по одной в строке"); return; }
+  const c = courseOf(g); const ls = clone(c.lessons || []); let sec = (ls[ls.length - 1] || {}).section || "Раздел 1", n = 0;
+  for (let line of lines) {
+    if (/^(раздел|тема\s*\d)/i.test(line)) { sec = line; continue; }
+    line = line.replace(/^(№\s*)?\d+[.)]?\s+/, "");
+    let kind = "lec";
+    if (/^(пз|п\.з\.|практ|лаб|лр)/i.test(line)) { kind = "pz"; line = line.replace(/^(пз|п\.з\.|практическ\S*\s+(занятие|работа)|практ\S*|лабораторн\S*\s+работа|лаб\S*|лр)\s*(№\s*)?\d*[.:)\-–—]?\s*/i, ""); }
+    else if (/^конс/i.test(line)) { kind = "cons"; line = line.replace(/^консультаци\S*[.:)\-–—]?\s*/i, ""); }
+    else if (/^(экзамен|диф|зач)/i.test(line)) kind = "exam";
+    else line = line.replace(/^лекци\S*\s*(№\s*)?\d*[.:)\-–—]?\s*/i, "");
+    if (!line) continue;
+    ls.push({ id: uid("l"), kind, topic: line, hours: 2, section: kind === "exam" ? "Промежуточная аттестация" : sec, graded: kind === "pz", pz: null }); n++;
+  }
+  Store.patch("courses/" + c.id, { lessons: renumberPZ(ls) }); ta.value = ""; toast(`Добавлено занятий: ${n}`);
 }
 function autoDates(g) {
   const start = $("#ad-start").value, per = +$("#ad-per").value || 1;
@@ -1396,12 +1624,13 @@ async function exportXlsx() {
   for (const id of ids) {
     const g = S.groups[id]; const no = numbering(g); usedCourses.add(g.courseId);
     const gl = gradeLessons(g), al = attLessons(g);
-    const A = [[`Группа ${g.name} — журнал успеваемости (${courseOf(g).title})`], [], ["№", "ФИО студента", ...gl.map(l => gradeLabel(l, no)), "Средний балл", "Долги", examName(g), "Итог"], ["", "дата", ...gl.map(l => fmtD(dOf(g, l.id))), "", "", "", ""]];
+    const st0 = settings(); const hdr = [...(st0.college ? [[st0.college]] : []), ...(st0.teacher ? [["Преподаватель: " + st0.teacher]] : [])];
+    const A = [...hdr, [`Группа ${g.name} — журнал успеваемости (${courseOf(g).title})`], [], ["№", "ФИО студента", ...gl.map(l => gradeLabel(l, no)), "Средний балл", "Долги", examName(g), "Итог"], ["", "дата", ...gl.map(l => fmtD(dOf(g, l.id))), "", "", "", ""]];
     students(g).forEach((s, i) => { const x = stuStats(g, s); A.push([i + 1, s.name, ...gl.map(l => { const v = mk(g, s.id, l.id).g; return /^[2-5]$/.test(v || "") ? +v : (v || ""); }), x.avg != null ? Math.round(x.avg * 100) / 100 : "", x.debts || "", x.ex ? (/^[2-5]$/.test(x.ex) ? +x.ex : x.ex) : "", x.fin ?? ""]); });
     const w1 = X.utils.aoa_to_sheet(A); w1["!cols"] = [{ wch: 4 }, { wch: 34 }, ...gl.map(() => ({ wch: 6 })), { wch: 12 }, { wch: 8 }, { wch: 9 }, { wch: 7 }];
     const sfx = multiCourse() ? " " + cshort(courseOf(g)) : "";
     X.utils.book_append_sheet(wb, w1, nm("Оценки " + g.name + sfx));
-    const B = [[`Группа ${g.name} — посещаемость`], [], ["№", "ФИО студента", ...al.map(l => no[l.id]), "Пропущено", "Посещаемость, %"], ["", "дата", ...al.map(l => fmtD(dOf(g, l.id))), "", ""]];
+    const B = [...hdr, [`Группа ${g.name} — посещаемость (${courseOf(g).title})`], [], ["№", "ФИО студента", ...al.map(l => no[l.id]), "Пропущено", "Посещаемость, %"], ["", "дата", ...al.map(l => fmtD(dOf(g, l.id))), "", ""]];
     students(g).forEach((s, i) => { const x = stuStats(g, s); B.push([i + 1, s.name, ...al.map(l => mk(g, s.id, l.id).a || ""), x.abs + x.exc, x.pct ?? ""]); });
     const w2 = X.utils.aoa_to_sheet(B); w2["!cols"] = [{ wch: 4 }, { wch: 34 }, ...al.map(() => ({ wch: 5 })), { wch: 10 }, { wch: 14 }];
     X.utils.book_append_sheet(wb, w2, nm("Посещ. " + g.name + sfx));
@@ -1430,13 +1659,15 @@ function importJson(file) {
     const ng = Object.keys(d.groups).length, ns = Object.values(d.groups).reduce((a, g) => a + (g.students || []).length, 0);
     const titles = Object.values(d.courses).map(c => c.title).join(", ");
     const add = () => {
-      for (const [id, c] of Object.entries(d.courses)) Store.set("courses/" + id, c);
-      for (const [id, g] of Object.entries(d.groups)) Store.set("groups/" + id, g);
+      let nNew = 0, nMerged = 0;
+      for (const [id, c] of Object.entries(d.courses)) { const L = S.courses[id]; if (!L || (c.ut || 0) > (L.ut || 0)) Store.set("courses/" + id, Object.assign(clone(c), { id })); }
+      for (const [id, g] of Object.entries(d.groups)) { const L = S.groups[id]; if (!L) { nNew++; Store.set("groups/" + id, Object.assign(clone(g), { id })); } else { nMerged++; Store.set("groups/" + id, mergeGroup(L, g)); } }
+      if (d.settings && (d.settings.ut || 0) > (S.settings.ut || 0)) Store.set("meta/settings", d.settings);
       const first = Object.values(d.groups)[0]; if (first) { S.ui.cid = first.courseId; S.ui.gid = first.id; }
-      toast("Данные добавлены в журнал");
+      toast(nMerged ? `Объединено: ${nMerged} ${plural(nMerged, "группа", "группы", "групп")}${nNew ? `, добавлено новых: ${nNew}` : ""}. Сохранены самые свежие отметки.` : "Данные добавлены в журнал");
     };
     if (!Object.keys(S.groups).length) { add(); return; }
-    modal({ title: "Загрузить копию", text: `В файле: ${esc(titles)} — ${ng} ${plural(ng, "группа", "группы", "групп")}, ${ns} ${plural(ns, "студент", "студента", "студентов")}. <br><br><b>Добавить</b> — данные из файла появятся рядом с текущими (совпадающие группы этой же дисциплины обновятся). <b>Заменить всё</b> — журнал станет точной копией файла.`, ok: "Добавить", onOk: add, alt: "Заменить всё", onAlt: () => {
+    modal({ title: "Загрузить копию", text: `В файле: ${esc(titles)} — ${ng} ${plural(ng, "группа", "группы", "групп")}, ${ns} ${plural(ns, "студент", "студента", "студентов")}${d.exportedAt ? `, сохранена ${esc(new Date(d.exportedAt).toLocaleString("ru-RU", { day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" }))}` : ""}.<br><br><b>Объединить</b> — новые группы добавятся, а в совпадающих останутся самые свежие отметки с обоих устройств. Так переносят журнал между телефоном и компьютером.<br><b>Заменить всё</b> — журнал станет точной копией файла.`, ok: "Объединить", onOk: add, alt: "Заменить всё", onAlt: () => {
       for (const id of Object.keys(S.groups)) if (!d.groups[id]) Store.remove("groups/" + id);
       for (const id of Object.keys(S.courses)) if (!d.courses[id]) Store.remove("courses/" + id);
       for (const [id, c] of Object.entries(d.courses)) Store.set("courses/" + id, c);
@@ -1448,6 +1679,33 @@ function importJson(file) {
   r.readAsText(file);
 }
 
+function newer(a, b, ka = "t") { if (!a) return b; if (!b) return a; return (b[ka] || 0) > (a[ka] || 0) ? b : a; }
+function mergeGroup(L, I) {
+  const nw = (I.ut || 0) > (L.ut || 0) ? I : L, old = nw === I ? L : I;
+  const r = clone(nw);
+  const removed = Object.assign({}, old.removed || {}, nw.removed || {});
+  const ids = new Set((r.students || []).map(x => x.id));
+  for (const st of old.students || []) if (!ids.has(st.id)) r.students.push(clone(st));
+  r.students = (r.students || []).filter(x => !removed[x.id]);
+  r.removed = removed;
+  r.marks = {};
+  for (const sid of new Set([...Object.keys(L.marks || {}), ...Object.keys(I.marks || {})])) {
+    if (removed[sid]) continue;
+    const a = (L.marks || {})[sid] || {}, b = (I.marks || {})[sid] || {}, out = {};
+    for (const lid of new Set([...Object.keys(a), ...Object.keys(b)])) { const c = newer(a[lid], b[lid]); if (c) out[lid] = clone(c); }
+    r.marks[sid] = out;
+  }
+  r.sched = {};
+  for (const lid of new Set([...Object.keys(L.sched || {}), ...Object.keys(I.sched || {})])) { const c = newer((L.sched || {})[lid], (I.sched || {})[lid]); if (c) r.sched[lid] = clone(c); }
+  r.exam = {}; r.examT = {};
+  for (const sid of new Set([...Object.keys(L.exam || {}), ...Object.keys(I.exam || {})])) {
+    const tl = (L.examT || {})[sid] || 0, ti = (I.examT || {})[sid] || 0;
+    const v = ti > tl ? (I.exam || {})[sid] : (L.exam || {})[sid] ?? (I.exam || {})[sid];
+    if (v != null) r.exam[sid] = v; r.examT[sid] = Math.max(tl, ti);
+  }
+  r.ut = Math.max(L.ut || 0, I.ut || 0); r.id = L.id;
+  return r;
+}
 function lastBackupText() { if (!STANDALONE) return ""; const d = LS.get("zh-lastbackup", null); return d ? ` Последняя копия: ${fmtLong(d)}.` : " Копий ещё не было."; }
 function backupNudge() {
   if (!groupsSorted().length || S.ui.view === "data") return "";
@@ -1457,7 +1715,8 @@ function backupNudge() {
 }
 /* ================= boot ================= */
 if (STANDALONE) {
-  try { navigator.storage && navigator.storage.persist && navigator.storage.persist(); } catch (e) {}
+  S.installed = matchMedia("(display-mode: standalone)").matches || navigator.standalone === true;
+  try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist().then(v => { S.persisted = v; }).catch(() => {}); } catch (e) {}
   if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").catch(() => {});
 }
 renderChrome();
